@@ -51,11 +51,11 @@ def nn_gaussian_states(m: int, n: int, parity: int) -> np.ndarray:
     return states
 
 
-g_states = gaussian_states(3, 2)
-for state in g_states.T:
-    print(state)
-
-print('----------')
-g_states = np.concatenate((nn_gaussian_states(3, 2, 0), nn_gaussian_states(3, 2, 1)), 1)
-for state in g_states.T:
-    print(state)
+# g_states = gaussian_states(3, 2)
+# for state in g_states.T:
+#     print(state)
+#
+# print('----------')
+# g_states = np.concatenate((nn_gaussian_states(3, 2, 0), nn_gaussian_states(3, 2, 1)), 1)
+# for state in g_states.T:
+#     print(state)
