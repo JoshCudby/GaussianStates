@@ -27,6 +27,10 @@ def read_binary_array(bin_arr: np.ndarray) -> int:
     return int(res)
 
 
+def int_to_binary_array(val: int, n: int) -> np.ndarray:
+    return np.array([*"{0:0{1}b}".format(val, n)], dtype=int)
+
+
 def get_highest_order_constraints(n, parity_of_targets: int):
     if parity_of_targets != 0 and parity_of_targets != 1:
         print('Parity must be either 0 or 1')
@@ -46,7 +50,7 @@ def get_highest_order_constraints(n, parity_of_targets: int):
                 y_int = read_binary_array(y)
                 sorted_term = sorted([x_int, y_int])
                 constraints_matrix[count, sorted_term[0], 0] = (-1) ** i
-                constraints_matrix[count, sorted_term[1], 1] = 1
+                constraints_matrix[count, sorted_term[1], 1] = 1  # this is not a good way to represent
             count += 1
 
     return constraints_matrix
@@ -60,7 +64,18 @@ def get_lower_order_constraints(n, l):
 
     for i in range(0, n - l + 1, 2):
         bit_strings = [0] * (n - l) if i == 0 else strings_with_weight(n - l, i)
+        # Need to find a way to correctly add the string where they agree to the constraint
         for string in bit_strings:
+            for constraint in odd_weight_target_constraints:
+                for j in range(2 ** (n - l)):
+                    if constraint[j, 0] != 0:
+                        first_label_bin = int_to_binary_array(j, n - l)
+                        summed_first_label = np.array(np.meshgrid(string, first_label_bin))
+
+                        second_label_bin = int_to_binary_array()
+                        for summed_str in summed_first_label:
+                            constraint_term_label = read_binary_array(summed_str)
+
             new_constraints.append(odd_weight_target_constraints)
 
     return new_constraints
@@ -76,10 +91,11 @@ def verify_highest_order_constraints(n, constraints):
         np.testing.assert_almost_equal(result, 0)
 
 
-for dim in range(6, 7):
+for dim in range(4, 5):
     N = 2 ** dim
     constraints = get_highest_order_constraints(dim, 1)
     print(f'Number of constraints = {np.linalg.matrix_rank(constraints[:, :, 0])}')
+    print(constraints[0,:,:])
 
     if dim < 8:
         _, indep_rows = sympy.Matrix(constraints[:, :, 0]).T.rref()
