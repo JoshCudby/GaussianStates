@@ -3,12 +3,21 @@ import numpy as np
 import math
 
 
-def get_highest_order_constraints(n: int) -> list[np.ndarray]:
+def get_highest_order_constraints_even_case(n: int, parity_of_state: int) -> list[np.ndarray]:
+    if n % 2 != 0:
+        raise Exception('Only get highest order constraints for even n')
+    if parity_of_state != 0 and parity_of_state != 1:
+        raise Exception('Parity should be 0 or 1')
+
     constraints_list: list[np.ndarray] = [0] * (2 ** (n - 2))
-    max_weight = 2 * math.floor((n + 2) / 4)
+    max_weight = 2 * math.floor((n + 2) / 4) if parity_of_state == 0 else 2 * math.floor(n / 4) + 1
     count = 0
-    for k in range(1, max_weight, 2):
-        targets = strings_with_weight(n, k)
+    for k in range(1 - parity_of_state, max_weight, 2):
+        targets = [[0] * n] if k == 0 else strings_with_weight(n, k)
+
+        if k == n / 2:
+            targets = targets[0:int(len(targets) / 2)]
+
         for target in targets:
             constraint = np.zeros((n, 2), dtype=int)
             for i in range(n):
@@ -58,14 +67,46 @@ def remove_duplicates(constraints: list[np.ndarray]) -> list[np.ndarray]:
         if sorted_constraint not in seen_elements:
             unique.append(constraint)
             seen_elements.add(sorted_constraint)
+        # else:
+        #     print(constraint)
     return unique
 
 
-def copy_constraints_for_odd_case(n: int, constraints: list[np.ndarray]) -> list[np.ndarray]:
-    constraints_copy: list[np.ndarray] = [constraint.copy() for constraint in constraints]
-    mapped_constraints = [np.array([list(term + (2 ** n)) for term in constraint])
-                          for constraint in constraints_copy]
-    return constraints + mapped_constraints
+def get_highest_order_constraints_odd_case(n: int) -> list[np.ndarray]:
+    all_new_constraints = []
+    even_parity_constraints = remove_duplicates(get_highest_order_constraints_even_case(n - 1, 0))
+    odd_parity_constraints = remove_duplicates(get_highest_order_constraints_even_case(n - 1, 1))
+
+    # Loop over: constraints, strings of length 1, choices of how to position
+    for constraint in even_parity_constraints:
+        constraint_in_binary = [[int_to_binary_array(int(t), n - 1) for t in term] for term in constraint]
+        length = len(constraint_in_binary[0][0])
+        new_constraints_in_binary = [
+            [[np.insert(binary_array, i, 0) for binary_array in term] for term in constraint_in_binary]
+            for i in range(length + 1)
+        ]
+        new_constraints = [
+            [[read_binary_array(binary_array) for binary_array in term] for term in constraint]
+            for constraint in new_constraints_in_binary
+        ]
+        for new_constraint in new_constraints:
+            all_new_constraints.append(np.array(new_constraint))
+
+    for constraint in odd_parity_constraints:
+        constraint_in_binary = [[int_to_binary_array(int(t), n - 1) for t in term] for term in constraint]
+        length = len(constraint_in_binary[0][0])
+        new_constraints_in_binary = [
+            [[np.insert(binary_array, i, 1) for binary_array in term] for term in constraint_in_binary]
+            for i in range(length + 1)
+        ]
+        new_constraints = [
+            [[read_binary_array(binary_array) for binary_array in term] for term in constraint]
+            for constraint in new_constraints_in_binary
+        ]
+        for new_constraint in new_constraints:
+            all_new_constraints.append(np.array(new_constraint))
+
+    return all_new_constraints
 
 
 def get_all_constraints(n: int) -> list[np.ndarray]:
@@ -73,15 +114,17 @@ def get_all_constraints(n: int) -> list[np.ndarray]:
         return []
     parity = n % 2
 
-    all_constraints = remove_duplicates(get_highest_order_constraints(4))
-    if parity == 1:
-        all_constraints = copy_constraints_for_odd_case(5, all_constraints)
-
-    for m in range(6, 2 * math.floor(n / 2) + 1, 2):
-        all_constraints = remove_duplicates(
-            get_highest_order_constraints(m) + get_lower_order_constraints(all_constraints, m)
-        )
-        if parity == 1:
-            all_constraints = copy_constraints_for_odd_case(m, all_constraints)
-
+    if parity == 0:
+        all_constraints = remove_duplicates(get_highest_order_constraints_even_case(4, 0))
+        for m in range(6, 2 * math.floor(n / 2) + 1, 2):
+            all_constraints = get_highest_order_constraints_even_case(m, 0) \
+                              + remove_duplicates( get_lower_order_constraints(all_constraints, m))
+            print(f'For n={m}, there are {len(all_constraints)} constraints')
+    else:
+        c = get_highest_order_constraints_odd_case(5)
+        all_constraints = remove_duplicates(c)
+        for m in range(7, n + 1, 2):
+            all_constraints = get_highest_order_constraints_odd_case(m) \
+                              + remove_duplicates(get_lower_order_constraints(all_constraints, m))
+            print(f'For n={m}, there are {len(all_constraints)} constraints')
     return all_constraints

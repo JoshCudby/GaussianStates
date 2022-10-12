@@ -10,8 +10,6 @@ def strings_with_weight(n, k) -> list[np.ndarray]:
         minbit = val & -val  # rightmost 1 bit
         fillbit = (val + minbit) & ~val  # rightmost 0 to the left of that bit
         val = val + minbit | (fillbit // (minbit << 1)) - 1
-    if (n % 2 == 0 and k == n / 2) or (n % 2 == 1 and k == (n - 1) / 2):
-        bit_strings = bit_strings[0:int(len(bit_strings) / 2)]
     return bit_strings
 
 
