@@ -1,7 +1,5 @@
 import functools
 import itertools
-from typing import List, Any
-
 import numpy as np
 from qutip import *
 
@@ -21,7 +19,7 @@ def jordan_wigner(n, j):
 def gaussian_states(m: int, n: int) -> np.ndarray:
     # m is the number of states desired, output as columns in a matrix; n is number of qubits
     size = 2 * n
-    jordan_wigners: List[Qobj] = [jordan_wigner(n, i + 1) for i in range(size)]
+    jordan_wigners: list[Qobj] = [jordan_wigner(n, i + 1) for i in range(size)]
     states = np.empty((2 ** n, m), complex)
     for i in range(m):
         random_components = (np.random.random_sample((size, size)) - 0.5) * 2
