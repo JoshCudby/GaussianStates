@@ -119,12 +119,12 @@ def get_all_constraints(n: int) -> list[np.ndarray]:
         for m in range(6, 2 * math.floor(n / 2) + 1, 2):
             all_constraints = get_highest_order_constraints_even_case(m, 0) \
                               + remove_duplicates( get_lower_order_constraints(all_constraints, m))
-            print(f'For n={m}, there are {len(all_constraints)} constraints')
+            # print(f'For n={m}, there are {len(all_constraints)} constraints')
     else:
         c = get_highest_order_constraints_odd_case(5)
         all_constraints = remove_duplicates(c)
         for m in range(7, n + 1, 2):
             all_constraints = get_highest_order_constraints_odd_case(m) \
                               + remove_duplicates(get_lower_order_constraints(all_constraints, m))
-            print(f'For n={m}, there are {len(all_constraints)} constraints')
+            # print(f'For n={m}, there are {len(all_constraints)} constraints')
     return all_constraints
