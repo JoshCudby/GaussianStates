@@ -7,17 +7,17 @@ def strings_with_weight(n, k) -> list[np.ndarray]:
     val = (1 << k) - 1
     while val < limit:
         bit_strings.append(np.array([*"{0:0{1}b}".format(val, n)], dtype=int))
-        minbit = val & -val  # rightmost 1 bit
-        fillbit = (val + minbit) & ~val  # rightmost 0 to the left of that bit
-        val = val + minbit | (fillbit // (minbit << 1)) - 1
+        min_bit = val & -val  # rightmost 1 bit
+        fillbit = (val + min_bit) & ~val  # rightmost 0 to the left of that bit
+        val = val + min_bit | (fillbit // (min_bit << 1)) - 1
     return bit_strings
 
 
 def read_binary_array(bin_arr: np.ndarray) -> int:
     res = 0
-    l = len(bin_arr)
-    for i in range(l):
-        res += 2 ** (l - i - 1) * bin_arr[i]
+    length = len(bin_arr)
+    for i in range(length):
+        res += 2 ** (length - i - 1) * bin_arr[i]
     return int(res)
 
 

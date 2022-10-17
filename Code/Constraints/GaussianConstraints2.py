@@ -59,7 +59,7 @@ def sorting_key(to_sort):
 
 
 def remove_duplicates(constraints: list[np.ndarray]) -> list[np.ndarray]:
-    # This removes identical elements, but it would be nice to be able to remove constraints which don't reduce the DoF
+    # This removes identical elements
     seen_elements = set()
     unique = []
     for constraint in constraints:
@@ -67,8 +67,6 @@ def remove_duplicates(constraints: list[np.ndarray]) -> list[np.ndarray]:
         if sorted_constraint not in seen_elements:
             unique.append(constraint)
             seen_elements.add(sorted_constraint)
-        # else:
-        #     print(constraint)
     return unique
 
 
@@ -118,7 +116,7 @@ def get_all_constraints(n: int) -> list[np.ndarray]:
         all_constraints = remove_duplicates(get_highest_order_constraints_even_case(4, 0))
         for m in range(6, 2 * math.floor(n / 2) + 1, 2):
             all_constraints = get_highest_order_constraints_even_case(m, 0) \
-                              + remove_duplicates( get_lower_order_constraints(all_constraints, m))
+                              + remove_duplicates(get_lower_order_constraints(all_constraints, m))
             # print(f'For n={m}, there are {len(all_constraints)} constraints')
     else:
         c = get_highest_order_constraints_odd_case(5)
@@ -128,3 +126,37 @@ def get_all_constraints(n: int) -> list[np.ndarray]:
                               + remove_duplicates(get_lower_order_constraints(all_constraints, m))
             # print(f'For n={m}, there are {len(all_constraints)} constraints')
     return all_constraints
+
+
+def find_independent_constraints(all_constraints: list[np.ndarray], state: np.ndarray) -> None:
+    independent_constraints = []
+    for z in range(len(all_constraints)):
+        test_constraints = list(independent_constraints.copy())
+        test_constraints.append(all_constraints[z])
+        m = len(test_constraints)
+        flattened_constraints = [constraint.flatten() for constraint in test_constraints]
+        a_labels = [item for sublist in flattened_constraints for item in sublist]
+        a_labels_set = sorted(list(set(a_labels)))
+        x_values = a_labels_set[0:m]
+        jacobian = np.zeros((m, m), dtype=complex)
+        for i in range(m):
+            constraint = test_constraints[i]
+            for j in range(m):
+                x = x_values[j]
+                for constraint_index in range(len(constraint)):
+                    constraint_term = constraint[constraint_index]
+                    for index in range(2):
+                        if x == constraint_term[index]:
+                            label_to_add = constraint_term[(index + 1) % 2]
+                            jacobian[i, j] = complex(state[label_to_add]) * ((-1) ** constraint_index)
+
+        rank = np.linalg.matrix_rank(jacobian)
+        if rank == m:
+            independent_constraints.append(all_constraints[z])
+        if z % 1000 == 0:
+            print(f'Constraint number {z} reached')
+
+    # for cons in independent_constraints:
+    #     mapped = list(map(list, cons))
+    #     print(mapped)
+    print(f'Number of independent constraints = {len(independent_constraints)}')
