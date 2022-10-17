@@ -28,7 +28,7 @@ def gaussian_states(m: int, n: int) -> np.ndarray:
         for k, l in itertools.product(range(size), range(size)):
             hamiltonian = hamiltonian + random_antisymmetric[k][l] * jordan_wigners[k] * jordan_wigners[l]
         operator = (-1 * hamiltonian).expm()
-        states[:, i] = operator.full()[:, 0]
+        states[:, i] = operator.full()[:, 3]
     return states
 
 
