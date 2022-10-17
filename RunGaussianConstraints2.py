@@ -2,7 +2,7 @@ from Code.Constraints.GaussianConstraints2 import get_all_constraints, find_inde
 from Code.States.GaussianStates import gaussian_states
 
 # Would be more efficient to just run for a single large i, printing/saving at each step if desired
-for dim in range(7, 8, 1):
+for dim in range(10, 11, 2):
     all_constraints = get_all_constraints(dim)
     state = gaussian_states(1, dim)
     for cons in all_constraints:
@@ -17,5 +17,16 @@ for dim in range(7, 8, 1):
 
     print(f'dim = {dim}')
     print(f'No. constraints = {len(all_constraints)}')
-    find_independent_constraints(all_constraints, state)
+    independent_constraints = find_independent_constraints(all_constraints, state)
+    long_constraints = [constraint for constraint in independent_constraints if len(constraint) == dim]
+    print(f'{len(long_constraints)} highest order constraints')
+    # flattened_constraints = [constraint.flatten() for constraint in long_constraints]
+    # a_labels = [item for sublist in flattened_constraints for item in sublist]
+    # a_labels_set = sorted(list(set(a_labels)))
+    # for a in a_labels_set:
+    #     count = 0
+    #     for a_test in a_labels:
+    #         if a_test == a:
+    #             count += 1
+    #     print(f'{a}: {count}')
 

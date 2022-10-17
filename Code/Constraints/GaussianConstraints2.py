@@ -128,7 +128,7 @@ def get_all_constraints(n: int) -> list[np.ndarray]:
     return all_constraints
 
 
-def find_independent_constraints(all_constraints: list[np.ndarray], state: np.ndarray) -> None:
+def find_independent_constraints(all_constraints: list[np.ndarray], state: np.ndarray) -> list[np.ndarray]:
     independent_constraints = []
     for z in range(len(all_constraints)):
         test_constraints = list(independent_constraints.copy())
@@ -137,6 +137,7 @@ def find_independent_constraints(all_constraints: list[np.ndarray], state: np.nd
         flattened_constraints = [constraint.flatten() for constraint in test_constraints]
         a_labels = [item for sublist in flattened_constraints for item in sublist]
         a_labels_set = sorted(list(set(a_labels)))
+        # a_labels_set = (list(set(a_labels)))
         x_values = a_labels_set[0:m]
         jacobian = np.zeros((m, m), dtype=complex)
         for i in range(m):
@@ -156,7 +157,8 @@ def find_independent_constraints(all_constraints: list[np.ndarray], state: np.nd
         if z % 1000 == 0:
             print(f'Constraint number {z} reached')
 
-    # for cons in independent_constraints:
-    #     mapped = list(map(list, cons))
-    #     print(mapped)
+    for cons in independent_constraints:
+        mapped = list(map(list, cons))
+        print(mapped)
     print(f'Number of independent constraints = {len(independent_constraints)}')
+    return independent_constraints
