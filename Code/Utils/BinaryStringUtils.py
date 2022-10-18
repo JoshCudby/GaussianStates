@@ -1,7 +1,8 @@
 import numpy as np
+from typing import List
 
 
-def strings_with_weight(n, k) -> list[np.ndarray]:
+def strings_with_weight(n, k) -> List[np.ndarray]:
     bit_strings = []
     limit = 1 << n
     val = (1 << k) - 1
