@@ -1,4 +1,5 @@
 from ..Utils.BinaryStringUtils import strings_with_weight, read_binary_array, int_to_binary_array
+from ..States.GaussianStates import gaussian_states
 import numpy as np
 import math
 from typing import List
@@ -130,25 +131,42 @@ def get_all_constraints(n: int) -> List[np.ndarray]:
     return all_constraints
 
 
-def find_independent_constraints(all_constraints: List[np.ndarray], state: np.ndarray) -> List[np.ndarray]:
+def get_independent_constraints(all_constraints: List[np.ndarray], state: np.ndarray) -> List[np.ndarray]:
     independent_constraints = []
+
+    # dim = max([len(x) for x in all_constraints])
+    # long_constraints = [x for x in independent_constraints if len(x) == dim]
+    # for z in range(len(long_constraints)):
+    #     test_constraints = independent_constraints.copy()
+    #     test_constraints.append(all_constraints[z])
+    #     m = len(test_constraints)
+    #     first_indices = set([term[0] for constraint in test_constraints for term in constraint])
+    #     # Find a set of constraints of size dim which are indep??
+    x_values_set = set()
     for z in range(len(all_constraints)):
-        test_constraints = list(independent_constraints.copy())
+        test_constraints = independent_constraints.copy()
         test_constraints.append(all_constraints[z])
         m = len(test_constraints)
+        if m == 200:
+            return independent_constraints
+
         flattened_constraints = [constraint.flatten() for constraint in test_constraints]
         a_labels = [item for sublist in flattened_constraints for item in sublist]
+        random.shuffle(a_labels)
 
-        a_labels_set = list(set(a_labels))
-        random.shuffle(a_labels_set)
-        # a_labels_set = sorted(list(set(a_labels)))
+        test_x_values = list(x_values_set.copy())
+        for a in a_labels:
+            if a not in x_values_set:
+                test_x_values.append(a)
+                break
 
-        x_values = a_labels_set[0:m]
+        if m > len(test_x_values):
+            raise Exception('Not enough a values')
         jacobian = np.zeros((m, m), dtype=complex)
         for i in range(m):
             constraint = test_constraints[i]
             for j in range(m):
-                x = x_values[j]
+                x = test_x_values[j]
                 for constraint_index in range(len(constraint)):
                     constraint_term = constraint[constraint_index]
                     for index in range(2):
@@ -159,10 +177,16 @@ def find_independent_constraints(all_constraints: List[np.ndarray], state: np.nd
         rank = np.linalg.matrix_rank(jacobian)
         if rank == m:
             independent_constraints.append(all_constraints[z])
+            x_values_set = set(test_x_values)
         # if z % 1000 == 0:
         #     print(f'Constraint number {z} reached')
 
     return independent_constraints
+
+
+def get_number_highest_order_independent_constraints(constraints: List[np.ndarray], state: np.ndarray, dim: int) -> int:
+    independent_constraints = get_independent_constraints(constraints, state)
+    return len([x for x in independent_constraints if len(x) == dim])
 
 
 def get_constraints_seen_for_targets(
@@ -176,7 +200,7 @@ def get_constraints_seen_for_targets(
     targets = [tuple(map(tuple, constraint)) for constraint in [all_constraints[x] for x in indexes]]
     for count in range(number_of_runs):
         random.shuffle(all_constraints)
-        independent_constraints = find_independent_constraints(all_constraints, state)
+        independent_constraints = get_independent_constraints(all_constraints, state)
         # print(f'Number of independent constraints = {len(independent_constraints)}')
 
         long_constraints = [constraint for constraint in independent_constraints if len(constraint) == dim]
@@ -193,6 +217,30 @@ def get_constraints_seen_for_targets(
                 all_seen_constraints.add(tuple(map(tuple, constraint)))
     return all_seen_constraints
 
+
+def get_matrix_of_independent_constraint_possibilities(
+        all_constraints: List[np.ndarray],
+        number_of_runs: int,
+        dim: int
+) -> np.ndarray:
+    matrix = np.zeros((number_of_runs, len(all_constraints)), dtype=int)
+    for i in range(number_of_runs):
+        state = gaussian_states(1, dim)
+        independent_constraints = get_independent_constraints(all_constraints, state)
+        independent_constraints = [tuple(map(tuple, constraint)) for constraint in independent_constraints]
+        for column, constraint in enumerate(all_constraints):
+            c = tuple(map(tuple, constraint))
+            for independent_constraint in independent_constraints:
+                if c == independent_constraint:
+                    matrix[i, column] = 1
+    return matrix
+
+
+# def random_sample_for_independent_constraints(
+#         all_constraints: List[np.ndarray],
+#         state: np.ndarray
+#
+# )
 
 def verify_constraints(constraints: List[np.ndarray], state: np.ndarray) -> None:
     for cons in constraints:

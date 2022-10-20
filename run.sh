@@ -8,9 +8,9 @@
 #! Number of cores per task (use for multithreaded jobs, by default 1)
 #SBATCH -c 1
 #!How much wallclock time will be required (HH:MM:SS)
-#SBATCH --time=00:05:00
+#SBATCH --time=10:00:00
 #!Output file name
 #SBATCH --output=R-%x.%j.out
-
+#SBATCH --mem=256G
 
 srun python3 RunGaussianConstraints2.py
