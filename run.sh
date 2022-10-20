@@ -11,6 +11,7 @@
 #SBATCH --time=10:00:00
 #!Output file name
 #SBATCH --output=R-%x.%j.out
-#SBATCH --mem=256G
+#SBATCH --mem=1000G
 
-srun python3 RunGaussianConstraints2.py
+source activate python38-env
+srun python3 RunGaussianConstraints.py

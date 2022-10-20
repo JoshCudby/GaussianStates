@@ -3,7 +3,7 @@ from Code.States.GaussianStates import gaussian_states
 from Code.Utils.FileReading import *
 from datetime import datetime
 
-for dim in range(10, 11, 2):
+for dim in range(12, 13, 2):
     state = gaussian_states(1, dim)
     filename = f'./Output/Constraints/all_constraints_{dim}.npy'
     try:
