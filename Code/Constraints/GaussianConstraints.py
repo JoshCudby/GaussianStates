@@ -1,9 +1,13 @@
 from ..Utils.BinaryStringUtils import strings_with_weight, read_binary_array, int_to_binary_array
+from ..Utils.FileReading import load_list_np_array, save_list_np_array
+from ..Utils.Logging import get_formatted_logger
 from ..States.GaussianStates import gaussian_states
 import numpy as np
 import math
 from typing import List
 import random
+
+logger = get_formatted_logger(__name__)
 
 
 def get_highest_order_constraints_even_case(n: int, parity_of_state: int) -> List[np.ndarray]:
@@ -111,22 +115,38 @@ def get_highest_order_constraints_odd_case(n: int) -> List[np.ndarray]:
 
 
 def get_all_constraints(n: int) -> List[np.ndarray]:
+    filename = '..\\..\\Output\\Constraints\\all_constraints_%s.npy'
     if n < 4:
         return []
     parity = n % 2
 
+    all_constraints = []
+    x = n
+    while x > 5:
+        try:
+            all_constraints = load_list_np_array(filename % x)
+            logger.info(f'Loaded constraints for n = {x}')
+            break
+        except FileNotFoundError:
+            x -= 2
+
     if parity == 0:
-        all_constraints = remove_duplicates(get_highest_order_constraints_even_case(4, 0))
-        for m in range(6, 2 * math.floor(n / 2) + 1, 2):
+        if x == 4:
+            all_constraints = remove_duplicates(get_highest_order_constraints_even_case(4, 0))
+            save_list_np_array(all_constraints, filename % 4)
+        for m in range(x + 2, n + 1, 2):
             all_constraints = get_highest_order_constraints_even_case(m, 0) \
                               + remove_duplicates(get_lower_order_constraints(all_constraints, m))
+            save_list_np_array(all_constraints, filename % m)
             # print(f'For n={m}, there are {len(all_constraints)} constraints')
     else:
-        c = get_highest_order_constraints_odd_case(5)
-        all_constraints = remove_duplicates(c)
-        for m in range(7, n + 1, 2):
+        if x == 5:
+            all_constraints = remove_duplicates(get_highest_order_constraints_odd_case(5))
+            save_list_np_array(all_constraints, filename % 5)
+        for m in range(x + 2, n + 1, 2):
             all_constraints = get_highest_order_constraints_odd_case(m) \
                               + remove_duplicates(get_lower_order_constraints(all_constraints, m))
+            save_list_np_array(all_constraints, filename % m)
             # print(f'For n={m}, there are {len(all_constraints)} constraints')
     return all_constraints
 
@@ -249,6 +269,6 @@ def verify_constraints(constraints: List[np.ndarray], state: np.ndarray) -> None
             term = cons[j]
             val += ((-1) ** j) * state[term[0]] * state[term[1]]
         if abs(val) > 10 ** (-12):
-            print(cons)
-            print(val)
+            logger.error(cons)
+            logger.error(val)
             raise Exception('Constraint not satisfied')
