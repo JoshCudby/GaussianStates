@@ -8,7 +8,7 @@ import os
 
 logger = get_formatted_logger(__name__)
 
-for dim in range(4, 5, 2):
+for dim in range(10, 11, 2):
     state = gaussian_states(1, dim)
     filename = f'./Output/Constraints/all_constraints_{dim}.npy'
     try:
@@ -29,9 +29,7 @@ for dim in range(4, 5, 2):
     for i in range(1):
         logger.info(f'Starting independent constraints run number {i + 1}')
         start_time = time()
-        long_constraints = [x for x in all_constraints if len(x) == dim]
-        random.shuffle(long_constraints)
-        all_constraints[0: len(long_constraints)] = long_constraints
+        random.shuffle(all_constraints)
         independent_constraints = get_independent_constraints(all_constraints, state)
         logger.info(f'Execution time: {round(time() - start_time, 2)}')
 

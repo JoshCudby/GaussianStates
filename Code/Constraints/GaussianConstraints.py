@@ -167,13 +167,11 @@ def get_independent_constraints(all_constraints: List[np.ndarray], state: np.nda
         test_constraints = independent_constraints.copy()
         test_constraints.append(all_constraints[z])
         m = len(test_constraints)
-        if m == 200:
-            return independent_constraints
 
         flattened_constraints = [constraint.flatten() for constraint in test_constraints]
         a_labels = [item for sublist in flattened_constraints for item in sublist]
-        # random.shuffle(a_labels)
-        a_labels = sorted(a_labels)  # Same number of constraints for both of these options, but this is slower
+        random.shuffle(a_labels)
+        # a_labels = sorted(a_labels)  # Same number of constraints for both of these options, but this is slower
 
         test_x_values = list(x_values_set.copy())
         for a in a_labels:
@@ -195,6 +193,7 @@ def get_independent_constraints(all_constraints: List[np.ndarray], state: np.nda
                             label_to_add = constraint_term[(index + 1) % 2]
                             jacobian[i, j] = complex(state[label_to_add]) * ((-1) ** constraint_index)
 
+        sv = np.linalg.svd(jacobian, compute_uv=False)
         rank = np.linalg.matrix_rank(jacobian)
         if rank == m:
             independent_constraints.append(all_constraints[z])
