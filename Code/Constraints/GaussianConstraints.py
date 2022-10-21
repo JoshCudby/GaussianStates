@@ -172,7 +172,8 @@ def get_independent_constraints(all_constraints: List[np.ndarray], state: np.nda
 
         flattened_constraints = [constraint.flatten() for constraint in test_constraints]
         a_labels = [item for sublist in flattened_constraints for item in sublist]
-        random.shuffle(a_labels)
+        # random.shuffle(a_labels)
+        a_labels = sorted(a_labels)  # Same number of constraints for both of these options, but this is slower
 
         test_x_values = list(x_values_set.copy())
         for a in a_labels:

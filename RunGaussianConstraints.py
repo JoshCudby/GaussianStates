@@ -8,14 +8,14 @@ import os
 
 logger = get_formatted_logger(__name__)
 
-for dim in range(10, 13, 2):
+for dim in range(4, 5, 2):
     state = gaussian_states(1, dim)
-    filename = f'.\\Output\\Constraints\\all_constraints_{dim}.npy'
+    filename = f'./Output/Constraints/all_constraints_{dim}.npy'
     try:
         all_constraints = load_list_np_array(filename)
         logger.info(f'Loaded existing constraints for n = {dim}')
     except FileNotFoundError:
-        logger.info('No existing constraints found. Computing ...')
+        logger.info(f'No existing constraints found for n = {dim}. Computing ...')
         start_time = time()
         all_constraints = get_all_constraints(dim)
         verify_constraints(all_constraints, state)
@@ -36,12 +36,12 @@ for dim in range(10, 13, 2):
         logger.info(f'Execution time: {round(time() - start_time, 2)}')
 
         now = datetime.now().strftime('%d-%m-%Y-%Hh%Mm%Ss')
-        directory_name = f'.\\Output\\Constraints\\independent_constraints_{dim}'
+        directory_name = f'./Output/Constraints/independent_constraints_{dim}'
 
         if not os.path.exists(directory_name):
             os.mkdir(directory_name)
 
-        filename = directory_name + f'\\{now}.npy'
+        filename = directory_name + f'/{now}.npy'
         logger.info('Saving to file')
         save_list_np_array(independent_constraints, filename)
 
