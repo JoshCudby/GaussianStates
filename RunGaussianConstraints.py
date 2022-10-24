@@ -8,7 +8,7 @@ import os
 
 logger = get_formatted_logger(__name__)
 
-for dim in range(10, 11, 2):
+for dim in range(14, 15, 1):
     state = gaussian_states(1, dim)
     filename = f'./Output/Constraints/all_constraints_{dim}.npy'
     try:
