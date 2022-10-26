@@ -1,6 +1,7 @@
 from ..Utils.BinaryStringUtils import strings_with_weight, read_binary_array, int_to_binary_array
 from ..Utils.FileReading import load_list_np_array, save_list_np_array
 from ..Utils.Logging import get_formatted_logger
+from ..Utils.ConstraintUtils import verify_constraints
 from ..States.GaussianStates import gaussian_states
 import numpy as np
 import math
@@ -57,7 +58,10 @@ def get_lower_order_constraints(constraints: List[np.ndarray], m: int) -> List[n
             for constraint in new_constraints_in_binary
         ]
         for new_constraint in new_constraints:
-            all_new_constraints.append(np.array(new_constraint))
+            if len(new_constraint) > 0:
+                all_new_constraints.append(np.array(new_constraint, dtype=int))
+
+    all_new_constraints = remove_duplicates(all_new_constraints)
     return all_new_constraints
 
 
@@ -115,14 +119,14 @@ def get_highest_order_constraints_odd_case(n: int) -> List[np.ndarray]:
 
 
 def get_all_constraints(n: int) -> List[np.ndarray]:
-    filename = '..\\..\\Output\\Constraints\\all_constraints_%s.npy'
+    filename = './Output/Constraints/all_constraints_%s.npy'
     if n < 4:
         return []
     parity = n % 2
 
     all_constraints = []
     x = n
-    while x > 5:
+    while x > 3:
         try:
             all_constraints = load_list_np_array(filename % x)
             logger.info(f'Loaded constraints for n = {x}')
@@ -130,38 +134,41 @@ def get_all_constraints(n: int) -> List[np.ndarray]:
         except FileNotFoundError:
             x -= 2
 
+    if len(all_constraints) == 0:
+        x += 2
+
     if parity == 0:
-        if x == 4:
+        if x == 4 and len(all_constraints) == 0:
             all_constraints = remove_duplicates(get_highest_order_constraints_even_case(4, 0))
+            # all_constraints = get_highest_order_constraints_even_case(4, 0)
+            logger.info(f'Saving constraints for n = 4')
             save_list_np_array(all_constraints, filename % 4)
         for m in range(x + 2, n + 1, 2):
             all_constraints = get_highest_order_constraints_even_case(m, 0) \
-                              + remove_duplicates(get_lower_order_constraints(all_constraints, m))
+                              + get_lower_order_constraints(all_constraints, m)
+            state = gaussian_states(1, m)
+            verify_constraints(all_constraints, state)
+            logger.info(f'Saving constraints for n = {m}')
             save_list_np_array(all_constraints, filename % m)
-            # print(f'For n={m}, there are {len(all_constraints)} constraints')
+            # logger.info(f'For n={m}, there are {len(all_constraints)} constraints')
     else:
-        if x == 5:
+        if x == 5 and len(all_constraints) == 0:
             all_constraints = remove_duplicates(get_highest_order_constraints_odd_case(5))
             save_list_np_array(all_constraints, filename % 5)
         for m in range(x + 2, n + 1, 2):
             all_constraints = get_highest_order_constraints_odd_case(m) \
-                              + remove_duplicates(get_lower_order_constraints(all_constraints, m))
+                              + get_lower_order_constraints(all_constraints, m)
+            state = gaussian_states(1, m)
+            verify_constraints(all_constraints, state)
+            logger.info(f'Saving constraints for n = {m}')
             save_list_np_array(all_constraints, filename % m)
-            # print(f'For n={m}, there are {len(all_constraints)} constraints')
+            # logger.info(f'For n={m}, there are {len(all_constraints)} constraints')
     return all_constraints
 
 
 def get_independent_constraints(all_constraints: List[np.ndarray], state: np.ndarray) -> List[np.ndarray]:
     independent_constraints = []
 
-    # dim = max([len(x) for x in all_constraints])
-    # long_constraints = [x for x in independent_constraints if len(x) == dim]
-    # for z in range(len(long_constraints)):
-    #     test_constraints = independent_constraints.copy()
-    #     test_constraints.append(all_constraints[z])
-    #     m = len(test_constraints)
-    #     first_indices = set([term[0] for constraint in test_constraints for term in constraint])
-    #     # Find a set of constraints of size dim which are indep??
     x_values_set = set()
     for z in range(len(all_constraints)):
         test_constraints = independent_constraints.copy()
@@ -193,7 +200,7 @@ def get_independent_constraints(all_constraints: List[np.ndarray], state: np.nda
                             label_to_add = constraint_term[(index + 1) % 2]
                             jacobian[i, j] = complex(state[label_to_add]) * ((-1) ** constraint_index)
 
-        sv = np.linalg.svd(jacobian, compute_uv=False)
+        # sv = np.linalg.svd(jacobian, compute_uv=False)
         rank = np.linalg.matrix_rank(jacobian)
         if rank == m:
             independent_constraints.append(all_constraints[z])
@@ -254,21 +261,3 @@ def get_matrix_of_independent_constraint_possibilities(
                 if c == independent_constraint:
                     matrix[i, column] = 1
     return matrix
-
-
-# def random_sample_for_independent_constraints(
-#         all_constraints: List[np.ndarray],
-#         state: np.ndarray
-#
-# )
-
-def verify_constraints(constraints: List[np.ndarray], state: np.ndarray) -> None:
-    for cons in constraints:
-        val = 0
-        for j in range(len(cons)):
-            term = cons[j]
-            val += ((-1) ** j) * state[term[0]] * state[term[1]]
-        if abs(val) > 10 ** (-12):
-            logger.error(cons)
-            logger.error(val)
-            raise Exception('Constraint not satisfied')

@@ -8,7 +8,7 @@ import os
 
 logger = get_formatted_logger(__name__)
 
-for dim in range(14, 15, 1):
+for dim in range(8, 10, 2):
     state = gaussian_states(1, dim)
     filename = f'./Output/Constraints/all_constraints_{dim}.npy'
     try:
@@ -21,7 +21,6 @@ for dim in range(14, 15, 1):
         verify_constraints(all_constraints, state)
         logger.info('Computed constraints')
         logger.info(f'Execution time: {round(time() - start_time, 2)}')
-        save_list_np_array(all_constraints, filename)
 
     # logger.info(f'dim = {dim}')
     # logger.info(f'No. constraints = {len(all_constraints)}')
@@ -40,7 +39,7 @@ for dim in range(14, 15, 1):
             os.mkdir(directory_name)
 
         filename = directory_name + f'/{now}.npy'
-        logger.info('Saving to file')
+        logger.info('Saving independent constraints')
         save_list_np_array(independent_constraints, filename)
 
     # matrix = get_matrix_of_independent_constraint_possibilities(all_constraints, 300, dim)
