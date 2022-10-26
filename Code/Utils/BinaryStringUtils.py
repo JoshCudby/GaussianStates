@@ -4,6 +4,8 @@ from typing import List
 
 def strings_with_weight(n, k) -> List[np.ndarray]:
     bit_strings = []
+    if k == 0:
+        return bit_strings
     limit = 1 << n
     val = (1 << k) - 1
     while val < limit:
