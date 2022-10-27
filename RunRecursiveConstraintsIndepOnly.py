@@ -7,7 +7,7 @@ from time import time
 import os
 
 logger = get_formatted_logger(__name__)
-dim = 10
+dim = 15
 
 state = gaussian_states(1, dim)
 
