@@ -10,9 +10,8 @@
 #!How much wallclock time will be required (HH:MM:SS)
 #SBATCH --time=12:00:00
 #!Output file name
-#SBATCH --output=R-%x.%j.out
-#SBATCH -p gpu
-#SBATCH --gpus=2
+#SBATCH --output=I-%x.%j.out
+#SBACTH --memory=1024G
 
 source activate python38-env
-srun python3 RunGaussianConstraints.py
+srun python3 RunIndependentConstraintsDirect.py
