@@ -1,7 +1,7 @@
+from ..Utils.ConstraintUtils import *
 from ..Utils.BinaryStringUtils import strings_with_weight, read_binary_array, int_to_binary_array
 from ..Utils.FileReading import load_list_np_array, save_list_np_array
 from ..Utils.Logging import get_formatted_logger
-from ..Utils.ConstraintUtils import verify_constraints
 from ..States.GaussianStates import gaussian_states
 import numpy as np
 import math
@@ -261,3 +261,12 @@ def get_matrix_of_independent_constraint_possibilities(
                 if c == independent_constraint:
                     matrix[i, column] = 1
     return matrix
+
+
+def get_independent_constraints_for_next_order(
+        independent_constraints: List[np.ndarray],
+        n: int
+) -> List[np.ndarray]:
+    new_highest_order_constraints = get_highest_order_constraints_even_case(n, 0)
+    mapped_existing_constraints = get_lower_order_constraints(independent_constraints, n)
+    return get_independent_set_of_constraints(new_highest_order_constraints + mapped_existing_constraints, n)
