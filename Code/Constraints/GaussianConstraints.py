@@ -265,8 +265,9 @@ def get_matrix_of_independent_constraint_possibilities(
 
 def get_independent_constraints_for_next_order(
         independent_constraints: List[np.ndarray],
-        n: int
+        n: int,
+        filename: str = None
 ) -> List[np.ndarray]:
     new_highest_order_constraints = get_highest_order_constraints_even_case(n, 0)
     mapped_existing_constraints = get_lower_order_constraints(independent_constraints, n)
-    return get_independent_set_of_constraints(new_highest_order_constraints + mapped_existing_constraints, n)
+    return get_independent_set_of_constraints(new_highest_order_constraints + mapped_existing_constraints, n, filename)

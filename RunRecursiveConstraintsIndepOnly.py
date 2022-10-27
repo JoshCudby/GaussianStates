@@ -2,14 +2,13 @@ from Code.Constraints.GaussianConstraints import *
 from Code.States.GaussianStates import gaussian_states
 from Code.Utils.FileReading import *
 from Code.Utils.Logging import get_formatted_logger
-from datetime import datetime
 from time import time
 import os
 
 logger = get_formatted_logger(__name__)
-dim = 15
+logger.info('Starting script')
 
-state = gaussian_states(1, dim)
+dim = 12
 
 directory_name = f'./Output/RecursiveConstraints'
 if not os.path.exists(directory_name):
@@ -25,17 +24,17 @@ while x > 3:
         logger.info(f'Loaded constraints for n = {x}')
         break
     except FileNotFoundError:
+        logger.info(f'No constraints found for n = {x}')
         x -= 2
-
 
 x += 2
 while x < dim + 1:
     start_time = time()
-    independent_constraints = get_independent_constraints_for_next_order(independent_constraints, x)
+    logger.info(f'Computing constraints for n = {x}')
+    state = gaussian_states(1, x)
+    independent_constraints = get_independent_constraints_for_next_order(independent_constraints, x, filename % x)
     verify_constraints(independent_constraints, state)
     logger.info(f'Execution time: {round(time() - start_time, 2)}')
-
-    now = datetime.now().strftime('%d-%m-%Y-%Hh%Mm%Ss')
 
     logger.info(f'Saving independent constraints for n = {x}')
     save_list_np_array(independent_constraints, filename % x)

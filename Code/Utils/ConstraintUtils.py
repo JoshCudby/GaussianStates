@@ -3,6 +3,7 @@ from typing import List
 from .Logging import get_formatted_logger
 from time import time
 from ..States.GaussianStates import gaussian_states
+from .FileReading import save_list_np_array
 
 logger = get_formatted_logger(__name__)
 
@@ -27,16 +28,21 @@ def differentiate_constraint_with_state(constraint: np.ndarray, x_value: int, st
         for constraint_index in range(len(constraint))])
 
 
-def get_independent_set_of_constraints(constraints: List[np.ndarray], n: int) -> List[np.ndarray]:
-    start_time = time()
+def get_independent_set_of_constraints(constraints: List[np.ndarray], n: int, filename: str = None) -> List[np.ndarray]:
     independent_constraints = []
     state = gaussian_states(1, n)
     x_values = []
     jacobian = None
+    independent_constraint_counter = 0
+    start_time = time()
     for z in range(len(constraints)):
-        if time() - start_time > 30:
+        if time() - start_time > 300:
             logger.info(f'Currently on iteration {z} out of {len(constraints)}.'
                         f'\n Current matrix size is {len(independent_constraints)}.')
+            if independent_constraint_counter == len(independent_constraints) and filename is not None:
+                logger.info(f'Matrix size has not changed. Saving ...')
+                save_list_np_array(independent_constraints, filename)
+            independent_constraint_counter = len(independent_constraints)
             start_time = time()
 
         new_test_constraint = constraints[z]
