@@ -1,6 +1,6 @@
 #!/bin/bash
 #! Name of the job:
-#SBATCH -J constraintsjob
+#SBATCH -J recursive_indep_only
 #! Number of required nodes (can be omitted in most cases)
 #SBATCH -N 1
 #! Number of tasks
@@ -10,7 +10,7 @@
 #!How much wallclock time will be required (HH:MM:SS)
 #SBATCH --time=12:00:00
 #!Output file name
-#SBATCH --output=I-%x.%j.out
+#SBATCH --output=R-%x.%j.out
 #SBACTH --memory=1024G
 
 source activate python38-env

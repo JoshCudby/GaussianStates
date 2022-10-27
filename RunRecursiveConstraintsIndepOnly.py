@@ -8,7 +8,7 @@ import os
 logger = get_formatted_logger(__name__)
 logger.info('Starting script')
 
-dim = 12
+dim = 14
 
 directory_name = f'./Output/RecursiveConstraints'
 if not os.path.exists(directory_name):
