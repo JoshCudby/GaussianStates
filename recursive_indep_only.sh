@@ -10,7 +10,7 @@
 #!How much wallclock time will be required (HH:MM:SS)
 #SBATCH --time=12:00:00
 #!Output file name
-#SBATCH --output=R-%x.%j.out
+#SBATCH --output=./Slurm/R-%x.%j.out
 #SBACTH --memory=1024G
 
 source activate python38-env
