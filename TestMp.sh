@@ -6,12 +6,12 @@
 #! Number of tasks
 #SBATCH --ntasks=1
 #! Number of cores per task (use for multithreaded jobs, by default 1)
-#SBATCH --cpus-per-task=2
+#SBATCH --cpus-per-task=5
 #!How much wallclock time will be required (HH:MM:SS)
 #SBATCH --time=12:00:00
 #!Output file name
 #SBATCH --output=./Slurm/R-%x.%j.out
-#SBATCH --mem-per-cpu=64G
+#SBATCH --mem-per-cpu=1G
 
 source activate python38-env
 
