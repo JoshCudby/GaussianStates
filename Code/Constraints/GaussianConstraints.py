@@ -6,7 +6,7 @@ from ..States.GaussianStates import gaussian_states
 import numpy as np
 import math
 from typing import List
-import random
+from mpi4py import MPI
 
 logger = get_formatted_logger(__name__)
 
@@ -140,7 +140,6 @@ def get_all_constraints(n: int) -> List[np.ndarray]:
     if parity == 0:
         if x == 4 and len(all_constraints) == 0:
             all_constraints = remove_duplicates(get_highest_order_constraints_even_case(4, 0))
-            # all_constraints = get_highest_order_constraints_even_case(4, 0)
             logger.info(f'Saving constraints for n = 4')
             save_list_np_array(all_constraints, filename % 4)
         for m in range(x + 2, n + 1, 2):
@@ -150,7 +149,6 @@ def get_all_constraints(n: int) -> List[np.ndarray]:
             verify_constraints(all_constraints, state)
             logger.info(f'Saving constraints for n = {m}')
             save_list_np_array(all_constraints, filename % m)
-            # logger.info(f'For n={m}, there are {len(all_constraints)} constraints')
     else:
         if x == 5 and len(all_constraints) == 0:
             all_constraints = remove_duplicates(get_highest_order_constraints_odd_case(5))
@@ -162,105 +160,7 @@ def get_all_constraints(n: int) -> List[np.ndarray]:
             verify_constraints(all_constraints, state)
             logger.info(f'Saving constraints for n = {m}')
             save_list_np_array(all_constraints, filename % m)
-            # logger.info(f'For n={m}, there are {len(all_constraints)} constraints')
     return all_constraints
-
-
-def get_independent_constraints(all_constraints: List[np.ndarray], state: np.ndarray) -> List[np.ndarray]:
-    independent_constraints = []
-
-    x_values_set = set()
-    for z in range(len(all_constraints)):
-        test_constraints = independent_constraints.copy()
-        test_constraints.append(all_constraints[z])
-        m = len(test_constraints)
-
-        flattened_constraints = [constraint.flatten() for constraint in test_constraints]
-        a_labels = [item for sublist in flattened_constraints for item in sublist]
-        random.shuffle(a_labels)
-        # a_labels = sorted(a_labels)  # Same number of constraints for both of these options, but this is slower
-
-        test_x_values = list(x_values_set.copy())
-        for a in a_labels:
-            if a not in x_values_set:
-                test_x_values.append(a)
-                break
-
-        if m > len(test_x_values):
-            raise Exception('Not enough a values')
-        jacobian = np.zeros((m, m), dtype=complex)
-        for i in range(m):
-            constraint = test_constraints[i]
-            for j in range(m):
-                x = test_x_values[j]
-                for constraint_index in range(len(constraint)):
-                    constraint_term = constraint[constraint_index]
-                    for index in range(2):
-                        if x == constraint_term[index]:
-                            label_to_add = constraint_term[(index + 1) % 2]
-                            jacobian[i, j] = complex(state[label_to_add]) * ((-1) ** constraint_index)
-
-        # sv = np.linalg.svd(jacobian, compute_uv=False)
-        rank = np.linalg.matrix_rank(jacobian)
-        if rank == m:
-            independent_constraints.append(all_constraints[z])
-            x_values_set = set(test_x_values)
-        # if z % 1000 == 0:
-        #     print(f'Constraint number {z} reached')
-
-    return independent_constraints
-
-
-def get_number_highest_order_independent_constraints(constraints: List[np.ndarray], state: np.ndarray, dim: int) -> int:
-    independent_constraints = get_independent_constraints(constraints, state)
-    return len([x for x in independent_constraints if len(x) == dim])
-
-
-def get_constraints_seen_for_targets(
-        all_constraints: List[np.ndarray],
-        indexes: List[int],
-        state: np.ndarray,
-        dim: int,
-        number_of_runs: int
-) -> set:
-    all_seen_constraints = set()
-    targets = [tuple(map(tuple, constraint)) for constraint in [all_constraints[x] for x in indexes]]
-    for count in range(number_of_runs):
-        random.shuffle(all_constraints)
-        independent_constraints = get_independent_constraints(all_constraints, state)
-        # print(f'Number of independent constraints = {len(independent_constraints)}')
-
-        long_constraints = [constraint for constraint in independent_constraints if len(constraint) == dim]
-        # print(f'{len(long_constraints)} highest order constraints')
-
-        to_add = [False] * len(targets)
-        for constraint in long_constraints:
-            mapped = tuple(map(tuple, constraint))
-            for index, t in enumerate(targets):
-                if t == mapped:
-                    to_add[index] = True
-        if all(to_add):
-            for constraint in long_constraints:
-                all_seen_constraints.add(tuple(map(tuple, constraint)))
-    return all_seen_constraints
-
-
-def get_matrix_of_independent_constraint_possibilities(
-        all_constraints: List[np.ndarray],
-        number_of_runs: int,
-        dim: int
-) -> np.ndarray:
-    matrix = np.zeros((number_of_runs, len(all_constraints)), dtype=int)
-    for i in range(number_of_runs):
-        state = gaussian_states(1, dim)
-        independent_constraints = get_independent_constraints(all_constraints, state)
-        independent_constraints = [tuple(map(tuple, constraint)) for constraint in independent_constraints]
-        for column, constraint in enumerate(all_constraints):
-            c = tuple(map(tuple, constraint))
-            for independent_constraint in independent_constraints:
-                if c == independent_constraint:
-                    matrix[i, column] = 1
-    return matrix
 
 
 def get_independent_constraints_for_next_order(
@@ -272,3 +172,31 @@ def get_independent_constraints_for_next_order(
     new_highest_order_constraints = get_highest_order_constraints_even_case(n, 0)
     mapped_existing_constraints = get_lower_order_constraints(independent_constraints, n)
     return get_independent_set_of_constraints(new_highest_order_constraints + mapped_existing_constraints, n, filename)
+
+
+def get_independent_constraints_for_next_order_mpi(
+        independent_constraints: List[np.ndarray],
+        n: int,
+        filename: str = None
+) -> List[np.ndarray]:
+    comm_world = MPI.COMM_WORLD
+    processor_rank = comm_world.Get_rank()
+
+    if processor_rank == 1:
+        print(f'Processor {processor_rank} running')
+        new_highest_order_constraints = get_highest_order_constraints_even_case(n, 0)
+        comm_world.send(new_highest_order_constraints, dest=0, tag=1)
+    elif processor_rank == 2:
+        print(f'Processor {processor_rank} running')
+        mapped_existing_constraints = get_lower_order_constraints(independent_constraints, n)
+        comm_world.send(mapped_existing_constraints, dest=0, tag=2)
+    elif processor_rank == 0:
+        new_highest_order_constraints = comm_world.recv(source=1, tag=1)
+        print(f'Processor {processor_rank} received from 1')
+        mapped_existing_constraints = comm_world.recv(source=2, tag=2)
+        print(f'Processor {processor_rank} received from 2')
+        return get_independent_set_of_constraints(
+            new_highest_order_constraints + mapped_existing_constraints,
+            n,
+            filename
+        )
