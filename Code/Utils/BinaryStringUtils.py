@@ -3,6 +3,8 @@ from typing import List
 
 
 def strings_with_weight(n, k) -> List[np.ndarray]:
+    if k > n:
+        raise Exception(f'Cannot get weight {k} strings of length {n}')
     bit_strings = []
     if k == 0:
         return bit_strings

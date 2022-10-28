@@ -35,6 +35,8 @@ def get_independent_set_of_constraints(constraints: List[np.ndarray], n: int, fi
     jacobian = None
     independent_constraint_counter = 0
     start_time = time()
+
+    # Could batch run many of these with MPI, but would need some careful synchronization
     for z in range(len(constraints)):
         if time() - start_time > 300:
             logger.info(f'Currently on iteration {z} out of {len(constraints)}.'
@@ -75,18 +77,20 @@ def get_independent_set_of_constraints(constraints: List[np.ndarray], n: int, fi
             value = differentiate_constraint_with_state(new_test_constraint, new_test_x_value, state)
             new_jacobian = np.array([[value]])
         else:
+            # These could be parallelized
             column_to_add = [
                 differentiate_constraint_with_state(constraint, new_test_x_value, state)
                 for constraint in independent_constraints
             ]
-            new_jacobian = np.column_stack((jacobian, column_to_add))
-
             row_to_add = [
                 differentiate_constraint_with_state(new_test_constraint, test_x_values[j], state)
                 for j in range(m)
             ]
+
+            new_jacobian = np.column_stack((jacobian, column_to_add))
             new_jacobian = np.vstack((new_jacobian, row_to_add))
 
+        # Can this be optimized?
         rank = np.linalg.matrix_rank(new_jacobian)
         if rank == m:
             independent_constraints.append(new_test_constraint)
