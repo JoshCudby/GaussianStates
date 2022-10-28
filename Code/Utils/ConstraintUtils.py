@@ -1,10 +1,10 @@
 import numpy as np
+from pathos.multiprocessing import ProcessPool as Pool
 from typing import List
 from .Logging import get_formatted_logger
 from time import time
 from ..States.GaussianStates import gaussian_states
 from .FileReading import save_list_np_array
-from mpi4py import MPI
 
 logger = get_formatted_logger(__name__)
 
@@ -84,7 +84,8 @@ def independent_constraint_iteration(
         independent_constraints.append(new_test_constraint)
         x_values = test_x_values
         jacobian = new_jacobian
-    return [independent_constraints, x_values, jacobian]
+        return [independent_constraints, x_values, jacobian]
+    return [None, None, None]
 
 
 def get_independent_set_of_constraints(constraints: List[np.ndarray], n: int, filename: str = None) -> List[np.ndarray]:
@@ -105,18 +106,20 @@ def get_independent_set_of_constraints(constraints: List[np.ndarray], n: int, fi
                 save_list_np_array(independent_constraints, filename)
             independent_constraint_counter = len(independent_constraints)
             start_time = time()
-        independent_constraints, x_values, jacobian = independent_constraint_iteration(
+        results = independent_constraint_iteration(
             independent_constraints,
             constraints[z],
             x_values,
             state,
             jacobian
         )
+        if all(results):
+            independent_constraints, x_values, jacobian = results
 
     return independent_constraints
 
 
-def get_independent_set_of_constraints_mpi(
+def get_independent_set_of_constraints_mp(
     constraints: List[np.ndarray],
     n: int,
     filename: str = None
@@ -127,26 +130,42 @@ def get_independent_set_of_constraints_mpi(
     jacobian = None
     independent_constraint_counter = 0
     start_time = time()
+    number_cpus = 18
 
-    comm_world = MPI.COMM_WORLD
-    process_rank = comm_world.Get_rank()
-
-    # Could batch run many of these with MPI, but would need some careful synchronization
-    for z in range(len(constraints)):
+    while len(constraints) > 0:
         if time() - start_time > 300:
-            logger.info(f'Currently on iteration {z} out of {len(constraints)}.'
+            logger.info(f'Currently {len(constraints)} remaining.'
                         f'\n Current matrix size is {len(independent_constraints)}.')
             if independent_constraint_counter == len(independent_constraints) and filename is not None:
                 logger.info(f'Matrix size has not changed. Saving ...')
                 save_list_np_array(independent_constraints, filename)
             independent_constraint_counter = len(independent_constraints)
             start_time = time()
-        independent_constraints, x_values, jacobian = independent_constraint_iteration(
-            independent_constraints,
-            constraints[z],
-            x_values,
-            state,
-            jacobian
-        )
+
+        with Pool(number_cpus) as pool:
+            results = pool.map(
+                independent_constraint_iteration,
+                [independent_constraints] * number_cpus,
+                [constraints[-z] for z in range(number_cpus)],
+                [x_values] * number_cpus,
+                [state] * number_cpus,
+                [jacobian] * number_cpus
+            )
+
+        have_added_constraint = False
+        constraints_to_retry = []
+        for result in results:
+            if not all(result):
+                constraints.pop()
+                logger.info('Not adding this constraint')
+            else:
+                if not have_added_constraint:
+                    independent_constraints.append(constraints.pop())
+                    have_added_constraint = True
+                    logger.info('Adding this constraint')
+                else:
+                    constraints_to_retry.append(constraints.pop())
+                    logger.info('Retrying this constraint')
+        constraints += constraints_to_retry
 
     return independent_constraints

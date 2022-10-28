@@ -6,7 +6,7 @@ from ..States.GaussianStates import gaussian_states
 import numpy as np
 import math
 from typing import List
-from mpi4py import MPI
+from pathos.multiprocessing import ProcessPool as Pool
 
 logger = get_formatted_logger(__name__)
 
@@ -168,35 +168,25 @@ def get_independent_constraints_for_next_order(
         n: int,
         filename: str = None
 ) -> List[np.ndarray]:
-    # These could be parallelized
     new_highest_order_constraints = get_highest_order_constraints_even_case(n, 0)
     mapped_existing_constraints = get_lower_order_constraints(independent_constraints, n)
     return get_independent_set_of_constraints(new_highest_order_constraints + mapped_existing_constraints, n, filename)
 
 
-def get_independent_constraints_for_next_order_mpi(
+def get_independent_constraints_for_next_order_mp(
         independent_constraints: List[np.ndarray],
         n: int,
         filename: str = None
 ) -> List[np.ndarray]:
-    comm_world = MPI.COMM_WORLD
-    processor_rank = comm_world.Get_rank()
+    with Pool(2) as p:
+        new_highest_order_constraints_async = p.apipe(get_highest_order_constraints_even_case, (n, 0))
+        mapped_existing_constraints_async = p.apipe(get_lower_order_constraints, (independent_constraints, n))
 
-    if processor_rank == 1:
-        print(f'Processor {processor_rank} running')
-        new_highest_order_constraints = get_highest_order_constraints_even_case(n, 0)
-        comm_world.send(new_highest_order_constraints, dest=0, tag=1)
-    elif processor_rank == 2:
-        print(f'Processor {processor_rank} running')
-        mapped_existing_constraints = get_lower_order_constraints(independent_constraints, n)
-        comm_world.send(mapped_existing_constraints, dest=0, tag=2)
-    elif processor_rank == 0:
-        new_highest_order_constraints = comm_world.recv(source=1, tag=1)
-        print(f'Processor {processor_rank} received from 1')
-        mapped_existing_constraints = comm_world.recv(source=2, tag=2)
-        print(f'Processor {processor_rank} received from 2')
-        return get_independent_set_of_constraints(
-            new_highest_order_constraints + mapped_existing_constraints,
-            n,
-            filename
-        )
+        new_highest_order_constraints = new_highest_order_constraints_async.get()
+        mapped_existing_constraints = mapped_existing_constraints_async.get()
+
+    return get_independent_set_of_constraints_mp(
+        new_highest_order_constraints + mapped_existing_constraints,
+        n,
+        filename
+    )
