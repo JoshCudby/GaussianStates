@@ -29,9 +29,11 @@ if __name__ == '__main__':
     with Pool(2) as p:
         res = p.apipe(matrix_operation, 1)
         res2 = p.apipe(matrix_operation_2, 2)
-        print(res.get())
-        print(res2.get())
+        x = (res.get())
+        y = (res2.get())
 
+    print(x)
+    print(y)
     t_delta = time() - t_start
 
     print('Seconds taken to operate on %d symmetric 2000x2000 matrices: %f' % (2, t_delta))
