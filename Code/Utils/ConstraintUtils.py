@@ -131,7 +131,7 @@ def get_independent_set_of_constraints_mp(
     independent_constraint_counter = 0
     start_time = time()
     number_cpus = 18
-
+    did_add_previous = [1] * number_cpus
     while len(constraints) > 0:
         if time() - start_time > 300:
             logger.info(f'Currently {len(constraints)} remaining.'
@@ -142,29 +142,52 @@ def get_independent_set_of_constraints_mp(
             independent_constraint_counter = len(independent_constraints)
             start_time = time()
 
-        with Pool(number_cpus) as pool:
-            results = pool.map(
-                independent_constraint_iteration,
-                [independent_constraints] * number_cpus,
-                [constraints[-z] for z in range(1, min(number_cpus, len(constraints)) + 1)],
-                [x_values] * number_cpus,
-                [state] * number_cpus,
-                [jacobian] * number_cpus
+        # Batch running is very slow near the start, when almost every constraint is independent
+        # Need some heuristic for when to start batching
+        if np.mean(did_add_previous) > 0.5:
+            result = independent_constraint_iteration(
+                independent_constraints,
+                constraints.pop(),
+                x_values,
+                state,
+                jacobian
             )
-
-        have_added_constraint = False
-        constraints_to_retry = []
-        for result in results:
-            if result is None:
-                constraints.pop()
+            if result is not None:
+                x_values = result[1]
+                jacobian = result[2]
+                did_add_previous.pop(0)
+                did_add_previous.append(1)
             else:
-                if not have_added_constraint:
-                    independent_constraints.append(constraints.pop())
-                    x_values = result[1]
-                    jacobian = result[2]
-                    have_added_constraint = True
+                did_add_previous.pop(0)
+                did_add_previous.append(0)
+
+        else:
+            with Pool(number_cpus) as pool:
+                results = pool.map(
+                    independent_constraint_iteration,
+                    [independent_constraints] * number_cpus,
+                    [constraints[-z] for z in range(1, min(number_cpus, len(constraints)) + 1)],
+                    [x_values] * number_cpus,
+                    [state] * number_cpus,
+                    [jacobian] * number_cpus
+                )
+
+            have_added_constraint = False
+            constraints_to_retry = []
+            for result in results:
+                did_add_previous.pop(0)
+                if result is None:
+                    constraints.pop()
+                    did_add_previous.append(0)
                 else:
-                    constraints_to_retry.append(constraints.pop())
-        constraints += constraints_to_retry
+                    did_add_previous.append(1)
+                    if not have_added_constraint:
+                        independent_constraints.append(constraints.pop())
+                        x_values = result[1]
+                        jacobian = result[2]
+                        have_added_constraint = True
+                    else:
+                        constraints_to_retry.append(constraints.pop())
+            constraints += constraints_to_retry
 
     return independent_constraints
