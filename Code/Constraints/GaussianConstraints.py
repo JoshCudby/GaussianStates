@@ -179,8 +179,8 @@ def get_independent_constraints_for_next_order_mp(
         filename: str = None
 ) -> List[np.ndarray]:
     with Pool(2) as p:
-        new_highest_order_constraints_async = p.apipe(get_highest_order_constraints_even_case, (n, 0))
-        mapped_existing_constraints_async = p.apipe(get_lower_order_constraints, (independent_constraints, n))
+        new_highest_order_constraints_async = p.apipe(get_highest_order_constraints_even_case, n, 0)
+        mapped_existing_constraints_async = p.apipe(get_lower_order_constraints, independent_constraints, n)
 
         new_highest_order_constraints = new_highest_order_constraints_async.get()
         mapped_existing_constraints = mapped_existing_constraints_async.get()

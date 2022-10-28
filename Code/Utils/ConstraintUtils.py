@@ -85,7 +85,7 @@ def independent_constraint_iteration(
         x_values = test_x_values
         jacobian = new_jacobian
         return [independent_constraints, x_values, jacobian]
-    return [None, None, None]
+    return None
 
 
 def get_independent_set_of_constraints(constraints: List[np.ndarray], n: int, filename: str = None) -> List[np.ndarray]:
@@ -146,7 +146,7 @@ def get_independent_set_of_constraints_mp(
             results = pool.map(
                 independent_constraint_iteration,
                 [independent_constraints] * number_cpus,
-                [constraints[-z] for z in range(number_cpus)],
+                [constraints[-z] for z in range(1, min(number_cpus, len(constraints)) + 1)],
                 [x_values] * number_cpus,
                 [state] * number_cpus,
                 [jacobian] * number_cpus
@@ -155,17 +155,16 @@ def get_independent_set_of_constraints_mp(
         have_added_constraint = False
         constraints_to_retry = []
         for result in results:
-            if not all(result):
+            if result is None:
                 constraints.pop()
-                logger.info('Not adding this constraint')
             else:
                 if not have_added_constraint:
                     independent_constraints.append(constraints.pop())
+                    x_values = result[1]
+                    jacobian = result[2]
                     have_added_constraint = True
-                    logger.info('Adding this constraint')
                 else:
                     constraints_to_retry.append(constraints.pop())
-                    logger.info('Retrying this constraint')
         constraints += constraints_to_retry
 
     return independent_constraints
