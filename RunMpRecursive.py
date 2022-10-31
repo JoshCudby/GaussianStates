@@ -6,8 +6,8 @@ from time import time
 import os
 
 # ~~~~~~~~~~~~ Parameters controlling script ~~~~~~~~~~~~~~
-dim = 14
-should_overwrite = True
+dim = 4
+should_overwrite = False
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 if __name__ == '__main__':
