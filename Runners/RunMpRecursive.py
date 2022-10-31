@@ -17,7 +17,7 @@ if __name__ == '__main__':
     logger = get_formatted_logger(__name__)
     logger.info('Starting script')
 
-    directory_name = f'./Output/MpRecursiveConstraints'
+    directory_name = f'../Output/MpRecursiveConstraints'
     if not os.path.exists(directory_name):
         os.mkdir(directory_name)
     filename = directory_name + f'/independent_constraints_%s.npy'

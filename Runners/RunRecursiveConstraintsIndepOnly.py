@@ -8,9 +8,9 @@ import os
 logger = get_formatted_logger(__name__)
 logger.info('Starting script')
 
-dim = 14
+dim = 6
 
-directory_name = f'./Output/RecursiveConstraints'
+directory_name = f'../Output/RecursiveConstraints'
 if not os.path.exists(directory_name):
     os.mkdir(directory_name)
 filename = directory_name + f'/independent_constraints_%s.npy'
