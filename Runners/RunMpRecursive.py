@@ -6,7 +6,7 @@ from time import time
 import os
 
 # ~~~~~~~~~~~~ Parameters controlling script ~~~~~~~~~~~~~~
-dim = 4
+dim = 14
 should_overwrite = False
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
