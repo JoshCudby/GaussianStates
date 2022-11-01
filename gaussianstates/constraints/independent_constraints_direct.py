@@ -1,8 +1,8 @@
 from scipy.spatial.distance import hamming
-from ..Utils.Logging import get_formatted_logger
-from ..Utils.BinaryStringUtils import *
-from ..Utils.ConstraintUtils import get_independent_set_of_constraints
-from ..Utils.FileReading import *
+from ..utils.logging_utils import get_formatted_logger
+from ..utils.binary_string_utils import *
+from ..utils.constraint_utils import get_independent_set_of_constraints
+from ..utils.file_reading_utils import *
 import numpy as np
 from typing import List
 import os
@@ -53,8 +53,8 @@ def get_independent_constraints_directly(n: int) -> List[np.ndarray]:
     constraints = get_constraints_from_targets(targets)
     independent_constraints = get_independent_set_of_constraints(constraints, n)
 
-    filename = './Output/IndependentConstraints/independent_constraints_%s.npy'
-    directory_name = f'./Output/IndependentConstraints'
+    filename = './data/IndependentConstraints/independent_constraints_%s.npy'
+    directory_name = f'./data/IndependentConstraints'
     if not os.path.exists(directory_name):
         os.mkdir(directory_name)
     save_list_np_array(independent_constraints, filename % n)

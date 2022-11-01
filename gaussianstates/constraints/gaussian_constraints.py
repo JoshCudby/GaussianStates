@@ -1,8 +1,8 @@
-from ..Utils.ConstraintUtils import *
-from ..Utils.BinaryStringUtils import strings_with_weight, read_binary_array, int_to_binary_array
-from ..Utils.FileReading import load_list_np_array, save_list_np_array
-from ..Utils.Logging import get_formatted_logger
-from ..States.GaussianStates import gaussian_states
+from ..utils.constraint_utils import *
+from ..utils.binary_string_utils import strings_with_weight, read_binary_array, int_to_binary_array
+from ..utils.file_reading_utils import load_list_np_array, save_list_np_array
+from ..utils.logging_utils import get_formatted_logger
+from ..states.gaussian_states import gaussian_states
 import numpy as np
 import math
 from typing import List
@@ -119,7 +119,7 @@ def get_highest_order_constraints_odd_case(n: int) -> List[np.ndarray]:
 
 
 def get_all_constraints(n: int) -> List[np.ndarray]:
-    filename = './Output/Constraints/all_constraints_%s.npy'
+    filename = './data/constraints/all_constraints_%s.npy'
     if n < 4:
         return []
     parity = n % 2

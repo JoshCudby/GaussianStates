@@ -1,10 +1,10 @@
 import numpy as np
 from pathos.multiprocessing import ProcessPool as Pool
 from typing import List
-from .Logging import get_formatted_logger
+from .logging_utils import get_formatted_logger
 from time import time
-from ..States.GaussianStates import gaussian_states
-from .FileReading import save_list_np_array
+from ..states.gaussian_states import gaussian_states
+from .file_reading_utils import save_list_np_array
 
 logger = get_formatted_logger(__name__)
 

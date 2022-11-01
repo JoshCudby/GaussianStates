@@ -1,12 +1,16 @@
-from qutip import *
+import qutip
 import sympy
-from ..Utils.Logging import get_formatted_logger
+import sys
+import os
+from gaussianstates.utils import logging_utils
 
-logger = get_formatted_logger(__name__)
+logger = logging_utils.get_formatted_logger(__name__)
+logger.info(sys.executable)
+logger.info(os.getcwd())
+logger.info(sys.path)
 
-
-def magic_state() -> Qobj:
-    return 0.5 * (basis(16, 0) + basis(16, 5) + basis(16, 10) + basis(16, 15))
+def magic_state() -> qutip.Qobj:
+    return 0.5 * (qutip.basis(16, 0) + qutip.basis(16, 5) + qutip.basis(16, 10) + qutip.basis(16, 15))
 
 
 def find_gaussian_rank_magic():
@@ -41,9 +45,9 @@ def find_gaussian_rank_magic():
         chi += 1
 
 
-def test():
+def main():
     find_gaussian_rank_magic()
 
 
 if __name__ == '__main__':
-    test()
+    main()
