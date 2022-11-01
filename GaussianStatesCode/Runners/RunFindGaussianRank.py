@@ -1,4 +1,4 @@
-from Code.GaussianRank.GaussianRankMagic import find_gaussian_rank_magic
+from GaussianStatesCode.GaussianRank.GaussianRankMagic import find_gaussian_rank_magic
 
 # ~~~~~~~~~~~~ Parameters controlling script ~~~~~~~~~~~~~~
 n = 1

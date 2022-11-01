@@ -1,7 +1,7 @@
-from Code.Constraints.IndependentConstraintsDirectAlgorithm import *
-from Code.States.GaussianStates import gaussian_states
-from Code.Utils.FileReading import *
-from Code.Utils.Logging import get_formatted_logger
+from GaussianStatesCode.Constraints.IndependentConstraintsDirectAlgorithm import *
+from GaussianStatesCode.States.GaussianStates import gaussian_states
+from GaussianStatesCode.Utils.FileReading import *
+from GaussianStatesCode.Utils.Logging import get_formatted_logger
 from time import time
 
 logger = get_formatted_logger(__name__)

@@ -1,7 +1,7 @@
-from Code.Constraints.GaussianConstraints import *
-from Code.States.GaussianStates import gaussian_states
-from Code.Utils.FileReading import *
-from Code.Utils.Logging import get_formatted_logger
+from GaussianStatesCode.Constraints.GaussianConstraints import *
+from GaussianStatesCode.States.GaussianStates import gaussian_states
+from GaussianStatesCode.Utils.FileReading import *
+from GaussianStatesCode.Utils.Logging import get_formatted_logger
 from time import time
 import os
 

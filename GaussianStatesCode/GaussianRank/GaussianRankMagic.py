@@ -1,6 +1,6 @@
 from qutip import *
 import sympy
-from Code.Utils.Logging import get_formatted_logger
+from ..Utils.Logging import get_formatted_logger
 
 logger = get_formatted_logger(__name__)
 
