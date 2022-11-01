@@ -15,4 +15,4 @@
 #!SBATCH --mem-per-cpu=64G
 
 source activate python38-env
-srun python3 Code/Runners/RunFindGaussianRank.py
+srun python3 ../Runners/RunFindGaussianRank.py
