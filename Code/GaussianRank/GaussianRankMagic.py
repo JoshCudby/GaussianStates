@@ -13,6 +13,7 @@ def find_gaussian_rank_magic():
     # n = 1
     input = magic_state()
     chi = 2
+    logger.info(f'Trying to find a decomposition of rank {chi}')
     while True:
         x_vars = sympy.Array([list(sympy.symbols('x%d(0:%d)' % (i, 4), real=True)) for i in range(chi)])
         y_vars = sympy.Array([list(sympy.symbols('y%d(0:%d)' % (i, 4), real=True)) for i in range(chi)])
