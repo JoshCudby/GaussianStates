@@ -9,6 +9,7 @@ logger.info(sys.executable)
 logger.info(os.getcwd())
 logger.info(sys.path)
 
+
 def magic_state() -> qutip.Qobj:
     return 0.5 * (qutip.basis(16, 0) + qutip.basis(16, 5) + qutip.basis(16, 10) + qutip.basis(16, 15))
 
@@ -36,9 +37,9 @@ def find_gaussian_rank_magic():
             for i in range(chi)
         ])
         derivatives = [lagrangian.diff(v) for v in all_vars]
-        solutions = sympy.nonlinsolve(derivatives, all_vars)
         logger.info(lagrangian)
         logger.info(derivatives)
+        solutions = sympy.nonlinsolve(derivatives, all_vars)
         logger.info(solutions)
         if chi > 2:
             return False
