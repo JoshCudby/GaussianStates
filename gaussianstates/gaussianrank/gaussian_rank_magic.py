@@ -19,44 +19,34 @@ def find_gaussian_rank_magic():
         y_vars = sympy.Array([list(sympy.symbols('y%d(0:%d)' % (i, 4), real=True)) for i in range(chi)])
         a_vars = sympy.Array([[x_vars[i][j] + 1j * y_vars[i][j] for j in range(4)] for i in range(chi)])
         a_star_vars = sympy.Array([[x_vars[i][j] - 1j * y_vars[i][j] for j in range(4)] for i in range(chi)])
-        lambda_vars = sympy.Array([list(sympy.symbols('L%d(0:%d)' % (i, 3), real=True)) for i in range(chi)])
-        sigma_vars = sympy.Array([sympy.symbols('S%d(0)' % i, real=True) for i in range(chi)])
-        all_vars = [item for sublist in
-                    x_vars.tolist() + y_vars.tolist() + lambda_vars.tolist()
-                    for item in sublist] + sigma_vars.tolist()
+        all_vars = [item for sublist in x_vars.tolist() + y_vars.tolist() for item in sublist]
 
-        lagrangian = 1 / 4 * sum([
-            (a_vars[i][k1]) * (a_star_vars[i][k2])
-            for i in range(chi) for k1 in range(4) for k2 in range(4)
-        ])
-        lagrangian += sum([
-            lambda_vars[i][0] * sympy.re(a_vars[i][0] * a_vars[i][3] + a_vars[i][1] * a_vars[i][2])
-            + sigma_vars[i] * sympy.im(a_vars[i][0] * a_vars[i][3] + a_vars[i][1] * a_vars[i][2])
-            + lambda_vars[i][1] * (sum([x_vars[i][k] ** 2 + y_vars[i][k] ** 2 for k in range(4)]) - 1)
-            + lambda_vars[i][2] * y_vars[i][0]
-            for i in range(chi)
-        ])
-        derivatives = [lagrangian.diff(v) for v in all_vars]
-        solutions = sympy.solve(derivatives, all_vars)
-        values = [lagrangian.subs([(all_vars[i], solution[i]) for i in range(len(all_vars))]) for solution in solutions]
-        deriv_values = [
-            derivative.subs([
-                (all_vars[i], solution[i]) for i in range(len(all_vars))
-            ])
-            for solution in solutions for derivative in derivatives
+        system = [
+            1 / 4 * sum([
+                (a_vars[i][k1]) * (a_star_vars[i][k2])
+                for i in range(chi) for k1 in range(4) for k2 in range(4)
+            ]),
         ]
+        for i in range(chi):
+            new_equations = [
+                sympy.re(a_vars[i][0] * a_vars[i][3] + a_vars[i][1] * a_vars[i][2]),
+                sympy.im(a_vars[i][0] * a_vars[i][3] + a_vars[i][1] * a_vars[i][2]),
+                sum([x_vars[i][k] ** 2 + y_vars[i][k] ** 2 for k in range(4)]) - 1,
+                y_vars[i][0]
+            ]
+            system += new_equations
+
+        solutions = sympy.solve(system, all_vars)
         if len(solutions) > 0:
             logger.info(solutions)
-            logger.info(values)
-            logger.info(deriv_values)
-            return lagrangian, derivatives, values, solutions
+            return system, solutions
         chi += 1
 
 
 def main():
     lagrangian, derivatives, values, solutions = find_gaussian_rank_magic()
-    return lagrangian, derivatives, values, solutions
+    return lagrangian, derivatives, solutions
 
 
 if __name__ == '__main__':
-    L, D, V, S = main()
+    L, D, S = main()
