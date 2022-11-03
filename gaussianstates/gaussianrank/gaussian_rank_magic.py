@@ -21,7 +21,9 @@ def find_gaussian_rank_magic():
         a_star_vars = sympy.Array([[x_vars[i][j] - 1j * y_vars[i][j] for j in range(4)] for i in range(chi)])
         lambda_vars = sympy.Array([list(sympy.symbols('L%d(0:%d)' % (i, 3), real=True)) for i in range(chi)])
         sigma_vars = sympy.Array([sympy.symbols('S%d(0)' % i, real=True) for i in range(chi)])
-        all_vars = [item for sublist in x_vars.tolist() + y_vars.tolist() + lambda_vars.tolist() for item in sublist]
+        all_vars = [item for sublist in
+                    x_vars.tolist() + y_vars.tolist() + lambda_vars.tolist()
+                    for item in sublist] + sigma_vars.tolist()
 
         lagrangian = 1 / 4 * sum([
             (a_vars[i][k1]) * (a_star_vars[i][k2])
