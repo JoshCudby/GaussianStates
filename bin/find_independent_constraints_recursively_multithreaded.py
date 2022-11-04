@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+sys.path.extend([os.getcwd()])
 
 from gaussianstates.constraints import gaussian_constraints as constraints
 from gaussianstates.states import gaussian_states as states
