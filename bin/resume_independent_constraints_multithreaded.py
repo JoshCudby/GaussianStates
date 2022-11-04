@@ -9,8 +9,11 @@ from gaussianstates.utils import logging_utils, file_reading_utils
 import time
 
 # ~~~~~~~~~~~~ Parameters controlling script ~~~~~~~~~~~~~~
-dim = 6
+dim = 14
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+if sys.argv[1] is not None and isinstance(sys.argv[1], int):
+    dim = sys.argv[1]
 
 if __name__ == '__main__':
     logger = logging_utils.get_formatted_logger(__name__)

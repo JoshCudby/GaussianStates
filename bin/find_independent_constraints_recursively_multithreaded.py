@@ -1,15 +1,18 @@
-import sys
 import os
+import sys
+import time
 
 from gaussianstates.constraints import gaussian_constraints as constraints
 from gaussianstates.states import gaussian_states as states
 from gaussianstates.utils import logging_utils, file_reading_utils
-import time
 
 # ~~~~~~~~~~~~ Parameters controlling script ~~~~~~~~~~~~~~
-dim = 6
-should_overwrite = True
+dim = 14
+should_overwrite = False
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+if sys.argv[1] is not None and isinstance(sys.argv[1], int):
+    dim = sys.argv[1]
 
 if __name__ == '__main__':
     x = dim
