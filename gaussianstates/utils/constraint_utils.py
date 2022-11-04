@@ -10,6 +10,7 @@ logger = get_formatted_logger(__name__)
 
 
 def verify_constraints(constraints: List[np.ndarray], state: np.ndarray) -> None:
+    """Check that a state satisfies a list of constraints"""
     for cons in constraints:
         val = 0
         for j in range(len(cons)):
@@ -21,7 +22,14 @@ def verify_constraints(constraints: List[np.ndarray], state: np.ndarray) -> None
             raise Exception('Constraint not satisfied')
 
 
-def differentiate_constraint_with_state(constraint: np.ndarray, x_value: int, state: np.ndarray):
+def _differentiate_constraint_with_state(constraint: np.ndarray, x_value: int, state: np.ndarray):
+    """Differentiate a constraint with respect to a given variable, and evaluate at the state.
+
+    Arguments:
+    constraint -- an independent constraint set for n qubits
+    x_values -- the value to differentiate with respect to
+    state -- a gaussian state of n qubits which will be used to evaluate the Jacobian for implicit function theorem
+    """
     return np.sum([
         complex(state[constraint[constraint_index][(index + 1) % 2]] * (-1) ** constraint_index)
         if constraint[constraint_index][index] == x_value else 0
@@ -29,16 +37,25 @@ def differentiate_constraint_with_state(constraint: np.ndarray, x_value: int, st
         for constraint_index in range(len(constraint))])
 
 
-def independent_constraint_iteration(
-    independent_constraints: List[np.ndarray],
-    new_test_constraint: np.ndarray,
-    x_values: List[int],
-    state: np.ndarray,
-    jacobian: np.ndarray = None,
+def _independent_constraint_iteration(
+        independent_constraints: List[np.ndarray],
+        test_constraint: np.ndarray,
+        x_values: List[int],
+        state: np.ndarray,
+        jacobian: np.ndarray = None,
 ):
+    """Test whether a constraint is independent of a given set.
+
+    Arguments:
+    independent_constraints -- an independent constraint set for n qubits
+    test_constraint -- a speculative new member of the set
+    x_values -- the values which will be used as independent for the implicit function theorem
+    state -- a gaussian state of n qubits which will be used to evaluate the Jacobian for implicit function theorem
+    jacobian -- the Jacobian for the independent set
+    """
     m = len(independent_constraints) + 1
 
-    new_a_labels = new_test_constraint.flatten()
+    new_a_labels = test_constraint.flatten()
     test_x_values = None
     new_test_x_value = None
 
@@ -62,16 +79,15 @@ def independent_constraint_iteration(
 
     # Handle the special case for the first loop
     if jacobian is None:
-        value = differentiate_constraint_with_state(new_test_constraint, new_test_x_value, state)
+        value = _differentiate_constraint_with_state(test_constraint, new_test_x_value, state)
         new_jacobian = np.array([[value]])
     else:
-        # These could be parallelized
         column_to_add = [
-            differentiate_constraint_with_state(constraint, new_test_x_value, state)
+            _differentiate_constraint_with_state(constraint, new_test_x_value, state)
             for constraint in independent_constraints
         ]
         row_to_add = [
-            differentiate_constraint_with_state(new_test_constraint, test_x_values[j], state)
+            _differentiate_constraint_with_state(test_constraint, test_x_values[j], state)
             for j in range(m)
         ]
 
@@ -81,7 +97,7 @@ def independent_constraint_iteration(
     # Can this be optimized?
     rank = np.linalg.matrix_rank(new_jacobian)
     if rank == m:
-        independent_constraints.append(new_test_constraint)
+        independent_constraints.append(test_constraint)
         x_values = test_x_values
         jacobian = new_jacobian
         return [independent_constraints, x_values, jacobian]
@@ -89,6 +105,13 @@ def independent_constraint_iteration(
 
 
 def get_independent_set_of_constraints(constraints: List[np.ndarray], n: int, filename: str = None) -> List[np.ndarray]:
+    """Find the independent constraints from a set of constraints on n qubits.
+
+    Arguments:
+    constraints -- constraints for n qubits
+    n -- the number of qubits
+    filename -- where to save the output (default = None)
+    """
     independent_constraints = []
     state = gaussian_states(1, n)
     x_values = []
@@ -96,7 +119,6 @@ def get_independent_set_of_constraints(constraints: List[np.ndarray], n: int, fi
     independent_constraint_counter = 0
     start_time = time()
 
-    # Could batch run many of these with MPI, but would need some careful synchronization
     for z in range(len(constraints)):
         if time() - start_time > 300:
             logger.info(f'Currently on iteration {z} out of {len(constraints)}.'
@@ -106,7 +128,7 @@ def get_independent_set_of_constraints(constraints: List[np.ndarray], n: int, fi
                 save_list_np_array(independent_constraints, filename)
             independent_constraint_counter = len(independent_constraints)
             start_time = time()
-        results = independent_constraint_iteration(
+        results = _independent_constraint_iteration(
             independent_constraints,
             constraints[z],
             x_values,
@@ -120,18 +142,26 @@ def get_independent_set_of_constraints(constraints: List[np.ndarray], n: int, fi
 
 
 def get_independent_set_of_constraints_mp(
-    constraints: List[np.ndarray],
-    n: int,
-    filename: str = None
+        constraints: List[np.ndarray],
+        n: int,
+        filename: str = None,
+        number_of_cores: int = 4
 ) -> List[np.ndarray]:
+    """Find the independent constraints from a set of constraints on n qubits.
+
+    Arguments:
+    constraints -- constraints for n qubits
+    n -- the number of qubits
+    filename -- where to save the output (default = None)
+    number_of_cores -- how many workers are available (default = 4)
+    """
     independent_constraints = []
     state = gaussian_states(1, n)
     x_values = []
     jacobian = None
     independent_constraint_counter = 0
     start_time = time()
-    number_cpus = 18
-    did_add_previous = [1] * number_cpus
+    did_add_previous = [1] * number_of_cores
     while len(constraints) > 0:
         if time() - start_time > 300:
             logger.info(f'Currently {len(constraints)} remaining.'
@@ -145,7 +175,7 @@ def get_independent_set_of_constraints_mp(
         # Batch running is very slow near the start, when almost every constraint is independent
         # Need some heuristic for when to start batching
         if np.mean(did_add_previous) > 0.5:
-            result = independent_constraint_iteration(
+            result = _independent_constraint_iteration(
                 independent_constraints,
                 constraints.pop(),
                 x_values,
@@ -162,14 +192,14 @@ def get_independent_set_of_constraints_mp(
                 did_add_previous.append(0)
 
         else:
-            with Pool(number_cpus) as pool:
+            with Pool(number_of_cores) as pool:
                 results = pool.map(
-                    independent_constraint_iteration,
-                    [independent_constraints] * number_cpus,
-                    [constraints[-z] for z in range(1, min(number_cpus, len(constraints)) + 1)],
-                    [x_values] * number_cpus,
-                    [state] * number_cpus,
-                    [jacobian] * number_cpus
+                    _independent_constraint_iteration,
+                    [independent_constraints] * number_of_cores,
+                    [constraints[-z] for z in range(1, min(number_of_cores, len(constraints)) + 1)],
+                    [x_values] * number_of_cores,
+                    [state] * number_of_cores,
+                    [jacobian] * number_of_cores
                 )
 
             have_added_constraint = False
