@@ -232,8 +232,31 @@ def get_independent_constraints_for_next_order_mp(
         mapped_existing_constraints = mapped_existing_constraints_async.get()
 
     return get_independent_set_of_constraints_mp(
-        new_highest_order_constraints + mapped_existing_constraints,
-        n,
-        filename,
+        constraints=new_highest_order_constraints + mapped_existing_constraints,
+        n=n,
+        filename=filename,
+        number_of_cores=18
+    )
+
+
+def resume_partial_run_independent_mp(n: int):
+    base_file = f'data/MpRecursiveConstraints/independent_constraints_{n}'
+    try:
+        independent_constraints = load_list_np_array(base_file + '.npy')
+        all_constraints = load_list_np_array(base_file + '_all.npy')
+        x_values: List[int] = list(np.load(base_file + '_x.npy'))
+        jacobian: np.ndarray = np.load(base_file + '_J.npy')
+        state = np.load(base_file + '_state.npy')
+    except FileNotFoundError:
+        logger.info('Partial data not available. Ending run.')
+        return
+    return get_independent_set_of_constraints_mp(
+        constraints=all_constraints,
+        n=n,
+        independent_constraints=independent_constraints,
+        x_values=x_values,
+        jacobian=jacobian,
+        state=state,
+        filename=base_file,
         number_of_cores=18
     )

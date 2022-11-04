@@ -1,8 +1,5 @@
 import sys
 import os
-print(os.getcwd())
-sys.path.extend([os.getcwd()])
-print(sys.path)
 
 from gaussianstates.constraints import gaussian_constraints as constraints
 from gaussianstates.states import gaussian_states as states
@@ -10,8 +7,8 @@ from gaussianstates.utils import logging_utils, file_reading_utils
 import time
 
 # ~~~~~~~~~~~~ Parameters controlling script ~~~~~~~~~~~~~~
-dim = 14
-should_overwrite = False
+dim = 6
+should_overwrite = True
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 if __name__ == '__main__':
@@ -21,7 +18,7 @@ if __name__ == '__main__':
     logger = logging_utils.get_formatted_logger(__name__)
     logger.info('Starting script')
 
-    directory_name = f'data/MpRecursiveConstraints'
+    directory_name = 'data/MpRecursiveConstraints'
     if not os.path.exists(directory_name):
         os.mkdir(directory_name)
     filename = directory_name + f'/independent_constraints_%s.npy'
@@ -44,7 +41,9 @@ if __name__ == '__main__':
         logger.info(f'Computing constraints for n = {x}')
         state = states.gaussian_states(1, x)
         independent_constraints = constraints.get_independent_constraints_for_next_order_mp(
-            independent_constraints, x, filename % x
+            independent_constraints,
+            x,
+            filename % x
         )
         constraints.verify_constraints(independent_constraints, state)
         logger.info(f'Execution time: {round(time.time() - start_time, 2)}')

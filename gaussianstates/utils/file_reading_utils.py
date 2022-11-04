@@ -7,6 +7,6 @@ def save_list_np_array(list_to_save: List[np.ndarray], filename: str):
     np.save(filename, to_save)
 
 
-def load_list_np_array(filename: str) -> List[np.ndarray]:
-    all_constraints_numpy = np.load(filename, allow_pickle=True)
-    return [constraint for constraint in all_constraints_numpy]
+def load_list_np_array(filename: str) -> List:
+    all_data_numpy = np.load(filename, allow_pickle=True)
+    return [constraint for constraint in all_data_numpy]

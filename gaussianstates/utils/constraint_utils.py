@@ -144,6 +144,10 @@ def get_independent_set_of_constraints(constraints: List[np.ndarray], n: int, fi
 def get_independent_set_of_constraints_mp(
         constraints: List[np.ndarray],
         n: int,
+        independent_constraints: List[np.ndarray] = None,
+        x_values: List[int] = None,
+        jacobian: np.ndarray = None,
+        state: np.ndarray = None,
         filename: str = None,
         number_of_cores: int = 4
 ) -> List[np.ndarray]:
@@ -155,22 +159,35 @@ def get_independent_set_of_constraints_mp(
     filename -- where to save the output (default = None)
     number_of_cores -- how many workers are available (default = 4)
     """
-    independent_constraints = []
-    state = gaussian_states(1, n)
-    x_values = []
-    jacobian = None
-    independent_constraint_counter = 0
-    start_time = time()
+    if x_values is None:
+        x_values = []
+    if independent_constraints is None:
+        independent_constraints = []
+    if state is None:
+        state = gaussian_states(1, n)
+    independent_constraint_counter = len(independent_constraints)
+    script_start_time = time()
+    iteration_start_time = time()
     did_add_previous = [1] * number_of_cores
     while len(constraints) > 0:
-        if time() - start_time > 300:
+        if script_start_time / (60 * 60) > 11:
+            logger.info('Script about to end. Saving partial data...')
+            save_list_np_array(independent_constraints, filename)
+            base_filename = filename.split('.')[0]
+
+            save_list_np_array(constraints, base_filename + '_all')
+            np.save(base_filename + '_x', x_values)
+            np.save(base_filename + '_J', jacobian)
+            np.save(base_filename + '_state', state)
+
+        if time() - iteration_start_time > 300:
             logger.info(f'Currently {len(constraints)} remaining.'
                         f'\n Current matrix size is {len(independent_constraints)}.')
             if independent_constraint_counter == len(independent_constraints) and filename is not None:
                 logger.info(f'Matrix size has not changed. Saving ...')
                 save_list_np_array(independent_constraints, filename)
             independent_constraint_counter = len(independent_constraints)
-            start_time = time()
+            iteration_start_time = time()
 
         # Batch running is very slow near the start, when almost every constraint is independent
         # Need some heuristic for when to start batching
