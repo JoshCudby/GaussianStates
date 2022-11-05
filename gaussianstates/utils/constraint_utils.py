@@ -135,7 +135,7 @@ def get_independent_set_of_constraints(constraints: List[np.ndarray], n: int, fi
             state,
             jacobian
         )
-        if all(results):
+        if results is not None:
             independent_constraints, x_values, jacobian = results
 
     return independent_constraints
@@ -170,7 +170,7 @@ def get_independent_set_of_constraints_mp(
     iteration_start_time = time()
     did_add_previous = [1] * number_of_cores
     while len(constraints) > 0:
-        if script_start_time / (60 * 60) > 11:
+        if time() - script_start_time / (60 * 60) > 11:
             logger.info('Script about to end. Saving partial data...')
             save_list_np_array(independent_constraints, filename)
             base_filename = filename.split('.')[0]

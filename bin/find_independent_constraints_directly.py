@@ -1,8 +1,6 @@
 import sys
 import os
-print(os.getcwd())
 sys.path.extend([os.getcwd()])
-print(sys.path)
 
 from gaussianstates.constraints import independent_constraints_direct as constraints
 from gaussianstates.states import gaussian_states as states
