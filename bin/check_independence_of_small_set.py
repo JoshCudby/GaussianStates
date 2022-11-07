@@ -8,7 +8,7 @@ from gaussianstates.utils import logging_utils, file_reading_utils
 import time
 
 # ~~~~~~~~~~~~ Parameters controlling script ~~~~~~~~~~~~~~
-dim = 8
+dim = 14
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 if __name__ == '__main__':

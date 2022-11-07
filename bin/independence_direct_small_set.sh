@@ -1,6 +1,6 @@
 #!/bin/bash
 #! Name of the job:
-#SBATCH -J recursive_indep_only
+#SBATCH -J small_set
 #! Partition
 #!SBATCH -p skylake
 #! Number of tasks
@@ -15,4 +15,4 @@
 #!SBATCH --mem-per-cpu=64G
 
 source activate python38-env
-srun python3 ./bin/find_independent_constraints_recursively.py
+srun python3 ./bin/check_independence_of_small_set.py
