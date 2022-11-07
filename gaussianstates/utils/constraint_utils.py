@@ -62,14 +62,17 @@ def _independent_constraint_iteration(
     for term in test_constraint:
         for index, t in enumerate(term):
             if t == 0:
-                new_test_x_value = term[(index + 1) % 2]
-                test_x_values = x_values + [new_test_x_value]
+                a = term[(index + 1) % 2]
+                if a not in x_values:
+                    new_test_x_value = a
+                    test_x_values = x_values + [a]
 
-    # for a in new_a_labels:
-    #     if a not in x_values and not a == 0:
-    #         new_test_x_value = a
-    #         test_x_values = x_values + [a]
-    #         break
+    # if new_test_x_value is None:
+    #     for a in new_a_labels:
+    #         if a not in x_values and not a == 0:
+    #             new_test_x_value = a
+    #             test_x_values = x_values + [a]
+    #             break
     #
     # if new_test_x_value is None:
     #     flattened_constraints = [constraint.flatten() for constraint in independent_constraints]
@@ -103,8 +106,6 @@ def _independent_constraint_iteration(
     # Can this be optimized?
     rank = np.linalg.matrix_rank(new_jacobian)
     if rank == m:
-        if rank == 16:
-            print('here')
         independent_constraints.append(test_constraint)
         x_values = test_x_values
         jacobian = new_jacobian

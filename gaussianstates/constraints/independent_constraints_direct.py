@@ -51,29 +51,26 @@ def _remove_duplicates(constraints: List[np.ndarray]) -> List[np.ndarray]:
 
 
 def _get_small_set_targets(n: int) -> List[List[np.ndarray]]:
-    other_parity_strings = [
+    if not n % 2 == 0:
+        raise Exception('Even n only')
+    odd_parity_strings = [
         item for sublist in
-        [strings_with_weight(n, k) for k in range((n + 1) % 2, n, 2)]
+        [strings_with_weight(n, k) for k in range(1, n, 2)]
         for item in sublist
     ]
-    # seen_elements = set()
-    # targets = []
-    # for i in range(len(other_parity_strings) - int(n * (n-1) / 2) - 1):
-    #     valid_targets = [
-    #         other_parity_strings[j]
-    #         for j in range(len(other_parity_strings))
-    #         if hamming(other_parity_strings[i], other_parity_strings[j]) * n > 2
-    #         and tuple(list(other_parity_strings[j])) not in seen_elements
-    #     ]
-    #     targets.append([other_parity_strings[i], valid_targets[0]])
-    #     seen_elements.add(tuple(list(valid_targets[0])))
-    starter = [1] + [0] * (n - 1)
-    targets = [
-        [starter, other_parity_strings[j]]
-        for j in range(len(other_parity_strings))
-        if hamming(starter, other_parity_strings[j]) * n > 2
-           and other_parity_strings[j][0] == 0
-    ]
+
+    targets = []
+    zero_weight_string = [0] * n
+    for i in range(0, n - 2):
+        first_target = _change_i_bit(zero_weight_string, i)
+        second_targets = [
+            odd_parity_strings[j]
+            for j in range(len(odd_parity_strings))
+            if hamming(first_target, odd_parity_strings[j]) * n > 2
+            and all([odd_parity_strings[j][k] == 0 for k in range(i + 1)])
+        ]
+        for second_target in second_targets:
+            targets.append([first_target, second_target])
 
     return targets
 
@@ -117,31 +114,6 @@ def get_independent_constraints_directly_from_small_set(n: int) -> List[np.ndarr
     targets = _get_small_set_targets(n)
     constraints = _get_constraints_from_targets(targets)
     independent_constraints = get_independent_set_of_constraints(constraints, n)
-
-    # other_parity_strings = [
-    #     item for sublist in
-    #     [strings_with_weight(n, k) for k in range((n + 1) % 2, n, 2)]
-    #     for item in sublist
-    # ]
-    # starters = [[0, 1, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0], [0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1]]
-    # starters.reverse()
-    # targets = []
-    # for starter in starters:
-    #     new_targets = [
-    #         [starter, other_parity_strings[j]]
-    #         for j in range(len(other_parity_strings))
-    #         if hamming(starter, other_parity_strings[j]) * n > 2
-    #     ]
-    #     targets.append(new_targets)
-    test_targets = [
-        [[0, 0, 0, 0, 0, 1], [0, 1, 1, 1, 0, 0]],
-        [[0, 0, 0, 0, 1, 0], [0, 1, 1, 0, 0, 1]],
-        [[0, 0, 0, 1, 0, 0], [0, 1, 0, 0, 1, 1]],
-        [[0, 0, 1, 0, 0, 0], [0, 0, 0, 1, 1, 1]],
-        [[0, 1, 0, 0, 0, 0], [0, 0, 1, 1, 1, 0]],
-    ]
-    constraints = _get_constraints_from_targets(test_targets)
-    new_independent_constraints = get_independent_set_of_constraints(independent_constraints + constraints, n)
 
     filename = './data/IndependentConstraints/independent_constraints_small_set%s.npy'
     directory_name = f'./data/IndependentConstraints'
