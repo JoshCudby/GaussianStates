@@ -10,7 +10,7 @@
 #!How much wallclock time will be required (HH:MM:SS)
 #SBATCH --time=12:00:00
 #!Output file name
-#SBATCH --output=Slurm/Recursive/R-%x.%j.out
+#SBATCH --output=Slurm/SmallSet/R-%x.%j.out
 #! Use default memory for now
 #!SBATCH --mem-per-cpu=64G
 
