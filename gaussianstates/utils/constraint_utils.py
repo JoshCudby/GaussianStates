@@ -59,20 +59,26 @@ def _independent_constraint_iteration(
     test_x_values = None
     new_test_x_value = None
 
-    for a in new_a_labels:
-        if a not in x_values:
-            new_test_x_value = a
-            test_x_values = x_values + [a]
-            break
+    for term in test_constraint:
+        for index, t in enumerate(term):
+            if t == 0:
+                new_test_x_value = term[(index + 1) % 2]
+                test_x_values = x_values + [new_test_x_value]
 
-    if new_test_x_value is None:
-        flattened_constraints = [constraint.flatten() for constraint in independent_constraints]
-        a_labels = [item for sublist in flattened_constraints for item in sublist]
-        for a in a_labels:
-            if a not in x_values:
-                new_test_x_value = a
-                test_x_values = x_values + [a]
-                break
+    # for a in new_a_labels:
+    #     if a not in x_values and not a == 0:
+    #         new_test_x_value = a
+    #         test_x_values = x_values + [a]
+    #         break
+    #
+    # if new_test_x_value is None:
+    #     flattened_constraints = [constraint.flatten() for constraint in independent_constraints]
+    #     a_labels = [item for sublist in flattened_constraints for item in sublist]
+    #     for a in a_labels:
+    #         if a not in x_values:
+    #             new_test_x_value = a
+    #             test_x_values = x_values + [a]
+    #             break
 
     if new_test_x_value is None:
         raise Exception('Could not find a new a label to differentiate w.r.t.')
@@ -97,6 +103,8 @@ def _independent_constraint_iteration(
     # Can this be optimized?
     rank = np.linalg.matrix_rank(new_jacobian)
     if rank == m:
+        if rank == 16:
+            print('here')
         independent_constraints.append(test_constraint)
         x_values = test_x_values
         jacobian = new_jacobian
@@ -170,7 +178,7 @@ def get_independent_set_of_constraints_mp(
     iteration_start_time = time()
     did_add_previous = [1] * number_of_cores
     while len(constraints) > 0:
-        if time() - script_start_time / (60 * 60) > 11:
+        if (time() - script_start_time) / (60 * 60) > 11:
             logger.info('Script about to end. Saving partial data...')
             save_list_np_array(independent_constraints, filename)
             base_filename = filename.split('.')[0]
