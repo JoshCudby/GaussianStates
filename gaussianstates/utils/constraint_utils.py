@@ -67,21 +67,21 @@ def _independent_constraint_iteration(
                     new_test_x_value = a
                     test_x_values = x_values + [a]
 
-    # if new_test_x_value is None:
-    #     for a in new_a_labels:
-    #         if a not in x_values and not a == 0:
-    #             new_test_x_value = a
-    #             test_x_values = x_values + [a]
-    #             break
-    #
-    # if new_test_x_value is None:
-    #     flattened_constraints = [constraint.flatten() for constraint in independent_constraints]
-    #     a_labels = [item for sublist in flattened_constraints for item in sublist]
-    #     for a in a_labels:
-    #         if a not in x_values:
-    #             new_test_x_value = a
-    #             test_x_values = x_values + [a]
-    #             break
+    if new_test_x_value is None:
+        for a in new_a_labels:
+            if a not in x_values and not a == 0:
+                new_test_x_value = a
+                test_x_values = x_values + [a]
+                break
+
+    if new_test_x_value is None:
+        flattened_constraints = [constraint.flatten() for constraint in independent_constraints]
+        a_labels = [item for sublist in flattened_constraints for item in sublist]
+        for a in a_labels:
+            if a not in x_values:
+                new_test_x_value = a
+                test_x_values = x_values + [a]
+                break
 
     if new_test_x_value is None:
         raise Exception('Could not find a new a label to differentiate w.r.t.')

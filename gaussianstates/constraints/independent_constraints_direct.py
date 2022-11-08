@@ -1,5 +1,3 @@
-import random
-
 from scipy.spatial.distance import hamming
 from ..utils.logging_utils import get_formatted_logger
 from ..utils.binary_string_utils import *
@@ -115,8 +113,8 @@ def get_independent_constraints_directly_from_small_set(n: int) -> List[np.ndarr
     constraints = _get_constraints_from_targets(targets)
     independent_constraints = get_independent_set_of_constraints(constraints, n)
 
-    filename = './data/IndependentConstraints/independent_constraints_small_set%s.npy'
-    directory_name = f'./data/IndependentConstraints'
+    filename = 'data/IndependentConstraints/independent_constraints_small_set%s.npy'
+    directory_name = 'data/IndependentConstraints'
     if not os.path.exists(directory_name):
         os.mkdir(directory_name)
     save_list_np_array(independent_constraints, filename % n)

@@ -10,7 +10,7 @@ import time
 logger = logging_utils.get_formatted_logger(__name__)
 should_overwrite = True
 
-for dim in range(12, 13, 2):
+for dim in range(6, 7, 2):
     state = states.gaussian_states(1, dim)
     filename = f'data/IndependentConstraints/independent_constraints_{dim}.npy'
     try:

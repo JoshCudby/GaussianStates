@@ -15,4 +15,4 @@
 #!SBATCH --mem-per-cpu=64G
 
 source activate python38-env
-srun python3 ./resume_independent_constraints_multithreaded.py 14
+srun python3 ./bin/resume_independent_constraints_multithreaded.py 14
