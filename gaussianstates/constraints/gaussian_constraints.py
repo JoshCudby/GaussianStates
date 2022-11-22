@@ -77,25 +77,8 @@ def _get_lower_order_constraints(constraints: List[np.ndarray], n: int) -> List[
             if len(new_constraint) > 0:
                 all_new_constraints.append(np.array(new_constraint, dtype=int))
 
-    all_new_constraints = _remove_duplicates(all_new_constraints)
+    all_new_constraints = remove_duplicates(all_new_constraints)
     return all_new_constraints
-
-
-def _sorting_key(to_sort):
-    """Used to sort nested lists by their first element"""
-    return to_sort[0]
-
-
-def _remove_duplicates(constraints: List[np.ndarray]) -> List[np.ndarray]:
-    """Used to remove identical constraints from a list"""
-    seen_elements = set()
-    unique = []
-    for constraint in constraints:
-        sorted_constraint = tuple(map(tuple, sorted(constraint, key=_sorting_key)))
-        if sorted_constraint not in seen_elements:
-            unique.append(constraint)
-            seen_elements.add(sorted_constraint)
-    return unique
 
 
 def _get_highest_order_constraints_odd_case(n: int) -> List[np.ndarray]:
@@ -107,8 +90,8 @@ def _get_highest_order_constraints_odd_case(n: int) -> List[np.ndarray]:
     The returned constraints are not all independent.
     """
     all_new_constraints = []
-    even_parity_constraints = _remove_duplicates(_get_highest_order_constraints_even_case(n - 1, 0))
-    odd_parity_constraints = _remove_duplicates(_get_highest_order_constraints_even_case(n - 1, 1))
+    even_parity_constraints = remove_duplicates(_get_highest_order_constraints_even_case(n - 1, 0))
+    odd_parity_constraints = remove_duplicates(_get_highest_order_constraints_even_case(n - 1, 1))
 
     # Loop over: constraints, strings of length 1, choices of how to position
     for constraint in even_parity_constraints:
@@ -170,7 +153,7 @@ def get_all_constraints(n: int) -> List[np.ndarray]:
 
     if parity == 0:
         if x == 4 and len(all_constraints) == 0:
-            all_constraints = _remove_duplicates(_get_highest_order_constraints_even_case(4, 0))
+            all_constraints = remove_duplicates(_get_highest_order_constraints_even_case(4, 0))
             logger.info(f'Saving constraints for n = 4')
             save_list_np_array(all_constraints, filename % 4)
         for m in range(x + 2, n + 1, 2):
@@ -182,7 +165,7 @@ def get_all_constraints(n: int) -> List[np.ndarray]:
             save_list_np_array(all_constraints, filename % m)
     else:
         if x == 5 and len(all_constraints) == 0:
-            all_constraints = _remove_duplicates(_get_highest_order_constraints_odd_case(5))
+            all_constraints = remove_duplicates(_get_highest_order_constraints_odd_case(5))
             save_list_np_array(all_constraints, filename % 5)
         for m in range(x + 2, n + 1, 2):
             all_constraints = _get_highest_order_constraints_odd_case(m) \

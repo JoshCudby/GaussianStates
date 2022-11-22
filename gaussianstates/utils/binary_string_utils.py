@@ -7,7 +7,7 @@ def strings_with_weight(n, k) -> List[np.ndarray]:
         raise Exception(f'Cannot get weight {k} strings of length {n}')
     bit_strings = []
     if k == 0:
-        return bit_strings
+        return [np.zeros(n, dtype=int)]
     limit = 1 << n
     val = (1 << k) - 1
     while val < limit:
@@ -28,3 +28,9 @@ def read_binary_array(bin_arr: np.ndarray) -> int:
 
 def int_to_binary_array(val: int, n: int) -> np.ndarray:
     return np.array([*"{0:0{1}b}".format(val, n)], dtype=int)
+
+
+def change_i_bit(string: np.ndarray, i: int) -> np.ndarray:
+    t1 = string.copy()
+    t1[i] = (t1[i] + 1) % 2
+    return t1
