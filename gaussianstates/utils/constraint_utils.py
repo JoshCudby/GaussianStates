@@ -25,16 +25,16 @@ def verify_constraints(constraints: List[np.ndarray], state: np.ndarray) -> None
 
 
 def get_targets(n: int) -> List[List[np.ndarray]]:
-    other_parity_strings = [
+    odd_parity_strings = [
         item for sublist in
-        [strings_with_weight(n, k) for k in range((n + 1) % 2, n, 2)]
+        [strings_with_weight(n, k) for k in range(1, n, 2)]
         for item in sublist
     ]
     targets = [
-        [other_parity_strings[i], other_parity_strings[j]]
-        for i in range(len(other_parity_strings))
-        for j in range(i + 1, len(other_parity_strings))
-        if hamming(other_parity_strings[i], other_parity_strings[j]) * n > 2
+        [odd_parity_strings[i], odd_parity_strings[j]]
+        for i in range(len(odd_parity_strings))
+        for j in range(i + 1, len(odd_parity_strings))
+        if hamming(odd_parity_strings[i], odd_parity_strings[j]) * n > 2
     ]
     return targets
 
@@ -49,7 +49,7 @@ def get_constraints_from_targets(targets: List[List[np.ndarray]]) -> List[np.nda
                     [read_binary_array(change_i_bit(target[0], i)), read_binary_array(change_i_bit(target[1], i))]
                 )
         constraints.append(np.array(constraint))
-    return constraints
+    return remove_duplicates(constraints)
 
 
 def _sorting_key(to_sort):
@@ -76,9 +76,9 @@ def remove_duplicates(constraints: List[np.ndarray]) -> List[np.ndarray]:
 
 def make_jacobian(constraints: List[np.ndarray], x_values: List[int], n: int):
     state = gaussian_states(1, n)
-    J = np.zeros((len(constraints), len(constraints)), dtype=complex)
+    J = np.zeros((len(constraints), len(x_values)), dtype=complex)
     for i in range(len(constraints)):
-        for j in range(len(constraints)):
+        for j in range(len(x_values)):
             J[i][j] = _differentiate_constraint_with_state(constraints[i], x_values[j], state)
     return J
 

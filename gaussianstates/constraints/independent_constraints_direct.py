@@ -17,7 +17,7 @@ def _sorting_key(to_sort):
     return to_sort[0]
 
 
-def _get_small_set_targets(n: int) -> List[List[np.ndarray]]:
+def get_small_set_targets(n: int) -> List[List[np.ndarray]]:
     if not n % 2 == 0:
         raise Exception('Even n only')
     odd_parity_strings = [
@@ -60,12 +60,12 @@ def get_independent_constraints_directly(n: int) -> List[np.ndarray]:
     return independent_constraints
 
 
-def get_independent_constraints_directly_from_small_set(n: int) -> (List[np.ndarray], np.ndarray, List[int], int):
+def get_independent_constraints_directly_from_small_set(n: int) -> (List[np.ndarray], np.ndarray, List[int]):
     parity = n % 2
     if parity != 0:
         raise Exception('Only works for even n at the moment')
 
-    targets = _get_small_set_targets(n)
+    targets = get_small_set_targets(n)
     constraints = get_constraints_from_targets(targets)
     independent_constraints, _ = get_independent_set_of_constraints(constraints, n)
 
@@ -75,19 +75,8 @@ def get_independent_constraints_directly_from_small_set(n: int) -> (List[np.ndar
         for item in sublist
     ]
 
-    # ints_bin = random.sample(even_weight, len(independent_constraints))
     ints = [read_binary_array(i) for i in even_weight]
     J = make_jacobian(independent_constraints, ints, n)
-
-    distances = []
-
-    # for e in even_weight:
-    #     count = 0
-    #     for arr in ints_bin:
-    #         if hamming(e, arr) * n > 2:
-    #             count += 1
-    #     distances.append(count)
-    # d_max = max(distances)
 
     filename = 'data/IndependentConstraints/independent_constraints_small_set%s.npy'
     directory_name = 'data/IndependentConstraints'
@@ -95,7 +84,7 @@ def get_independent_constraints_directly_from_small_set(n: int) -> (List[np.ndar
         os.mkdir(directory_name)
     save_list_np_array(independent_constraints, filename % n)
 
-    return independent_constraints, J, ints  #, d_max
+    return independent_constraints, J, ints
 
 
 def get_independent_constraints_directly_from_target_set(

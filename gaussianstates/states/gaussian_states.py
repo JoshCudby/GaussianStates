@@ -17,8 +17,8 @@ def jordan_wigner(n, j):
     return functools.reduce(tensor, operator_components)
 
 
-def gaussian_states(m: int, n: int) -> np.ndarray:
-    # m is the number of states desired, output as columns in a matrix; n is number of qubits
+def gaussian_states(m: int, n: int, parity=0) -> np.ndarray:
+    """m is the number of states desired, output as columns in a matrix; n is number of qubits"""
     size = 2 * n
     jordan_wigners: List[Qobj] = [jordan_wigner(n, i + 1) for i in range(size)]
     states_list = np.empty((2 ** n, m), complex)
@@ -29,5 +29,5 @@ def gaussian_states(m: int, n: int) -> np.ndarray:
         for k, l in itertools.product(range(size), range(size)):
             hamiltonian = hamiltonian + random_antisymmetric[k][l] * jordan_wigners[k] * jordan_wigners[l]
         operator = (-1 * hamiltonian).expm()
-        states_list[:, i] = operator.full()[:, 0]
+        states_list[:, i] = operator.full()[:, parity % 2]
     return states_list
