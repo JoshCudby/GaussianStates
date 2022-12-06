@@ -10,7 +10,7 @@
 #!How much wallclock time will be required (HH:MM:SS)
 #SBATCH --time=12:00:00
 #!Output file name
-#SBATCH --output=Slurm/SmallSet/R-%x.%j.out
+#SBATCH --output=Slurm/Rank/R-%x.%j.out
 
 source activate python38-env
 srun python3 ./bin/gaussian_rank.py
