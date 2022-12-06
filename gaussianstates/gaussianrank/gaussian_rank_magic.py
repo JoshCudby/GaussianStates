@@ -65,14 +65,14 @@ def grad_cost_function(state_labels: List[List[complex]]):
 def cost_function(state_labels):
     return abs(1 - 1 / 4 * (
         sum([
-            state_labels[x + 254] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label)]]))
-            - state_labels[x + 255] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label) + 1]]))
+            state_labels[x + 256] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label)]]))
+            - state_labels[x + 257] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label) + 1]]))
             for special_label in special_labels for x in [0, 258, 516]
         ]) ** 2
         +
         sum([
-            state_labels[x + 254] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label) + 1]]))
-            + state_labels[x + 255] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label)]]))
+            state_labels[x + 256] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label) + 1]]))
+            + state_labels[x + 257] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label)]]))
             for special_label in special_labels for x in [0, 258, 516]
         ]) ** 2
     ))
