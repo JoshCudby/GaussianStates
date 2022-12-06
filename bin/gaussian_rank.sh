@@ -1,6 +1,6 @@
 #!/bin/bash
 #! Name of the job:
-#SBATCH -J small_set
+#SBATCH -J rank
 #! Partition
 #!SBATCH -p skylake
 #! Number of tasks
