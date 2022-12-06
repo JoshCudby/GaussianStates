@@ -157,13 +157,11 @@ def main():
     return s
 
 
-n = 8
-
-
 def s_key(c):
     return sum(c[0])
 
 
+n = 8
 constraints = sorted(get_constraints_from_targets(get_small_set_targets(n)), key=s_key)
 
 even_weight_bin = [
@@ -173,8 +171,7 @@ even_weight_bin = [
 ]
 even_weight_labels = sorted([read_binary_array(b) for b in even_weight_bin])
 
-# special_labels = [0, 15, 240, 255]
-special_labels = [0, 15]
+special_labels = [0, 15, 240, 255]
 
 if __name__ == '__main__':
     sol = main()
