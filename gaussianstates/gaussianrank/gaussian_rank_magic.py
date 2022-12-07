@@ -147,8 +147,8 @@ def _find_gaussian_rank_magic():
         cost_function,
         initial_random_states,
         method='trust-constr',
-        options={'verbose': 3},
-        constraints=nonlinear_constraint
+        options={'verbose': 3, 'initial_tr_radius': 3.0},
+        constraints=nonlinear_constraint,
     )
     return solution
 
