@@ -17,7 +17,7 @@ def _sorting_key(to_sort):
     return to_sort[0]
 
 
-def get_small_set_targets(n: int) -> List[List[np.ndarray]]:
+def get_small_set_targets(n: int, input_string=None) -> List[List[np.ndarray]]:
     if not n % 2 == 0:
         raise Exception('Even n only')
     odd_parity_strings = [
@@ -27,14 +27,16 @@ def get_small_set_targets(n: int) -> List[List[np.ndarray]]:
     ]
 
     targets = []
-    zero_weight_string = [0] * n
+    if input_string is None:
+        input_string = np.array([0] * n)
+
     for i in range(0, n - 2):
-        first_target = change_i_bit(zero_weight_string, i)
+        first_target = change_i_bit(input_string, i)
         second_targets = [
             odd_parity_strings[j]
             for j in range(len(odd_parity_strings))
             if hamming(first_target, odd_parity_strings[j]) * n > 2
-            and all([odd_parity_strings[j][k] == 0 for k in range(i + 1)])
+            and all([odd_parity_strings[j][k] == input_string[k] for k in range(i + 1)])
         ]
         for second_target in second_targets:
             targets.append([first_target, second_target])

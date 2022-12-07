@@ -7,7 +7,7 @@ from gaussianstates.constraints.independent_constraints_direct import get_small_
 from gaussianstates.states.gaussian_states import gaussian_states
 from gaussianstates.utils import logging_utils
 from gaussianstates.utils.binary_string_utils import strings_with_weight, read_binary_array
-from gaussianstates.utils.constraint_utils import get_constraints_from_targets, verify_constraints
+from gaussianstates.utils.constraint_utils import get_constraints_from_targets, verify_constraints, remove_duplicates
 
 """Decomposes tensor products of a magic state into a sum of Gaussian states"""
 logger = logging_utils.get_formatted_logger(__name__)
@@ -39,61 +39,64 @@ def grad_cost_function(state_labels: List[List[complex]]):
         for label_index, label in enumerate(even_weight_labels):
             grad[j][label_index] = (
                 -0.5 * state_label[-1] if label in special_labels else 0
-                + penalty * (
-                    sum([
-                        state_label[even_weight_labels.index(
-                            term[(i + 1) % 2])] * (
-                            -1) ** term_index
-                        for c in constraints for
-                        term_index, term in enumerate(c) for
-                        i, t in enumerate(term)
-                        if term[i] == label
-                    ])
-                    + abs(state_label[label_index])
-                )
+                                                                       + penalty * (
+                                                                               sum([
+                                                                                   state_label[even_weight_labels.index(
+                                                                                       term[(i + 1) % 2])] * (
+                                                                                       -1) ** term_index
+                                                                                   for c in constraints for
+                                                                                   term_index, term in enumerate(c) for
+                                                                                   i, t in enumerate(term)
+                                                                                   if term[i] == label
+                                                                               ])
+                                                                               + abs(state_label[label_index])
+                                                                       )
             )
 
         grad[j][-1] = (
-            -0.5 * (
+                -0.5 * (
                 state_label[even_weight_labels.index(0)] + state_label[even_weight_labels.index(15)] +
                 state_label[even_weight_labels.index(240)] + state_label[even_weight_labels.index(255)]
-            )
+        )
         )
     return grad
 
 
 def cost_function(state_labels):
     return abs(1 - 1 / 4 * (
-        sum([
-            state_labels[x + 2 ** n] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label)]]))
-            - state_labels[x + 2 ** n + 1] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label) + 1]]))
-            for special_label in special_labels for x in [0, 2 ** n + 2, 2 * (2 ** n + 2)]
-        ]) ** 2
-        +
-        sum([
-            state_labels[x + 2 ** n] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label) + 1]]))
-            + state_labels[x + 2 ** n + 1] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label)]]))
-            for special_label in special_labels for x in [0, 2 ** n + 2, 2 * (2 ** n + 2)]
-        ]) ** 2
+            sum([
+                state_labels[x + 2 ** n] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label)]]))
+                - state_labels[x + 2 ** n + 1] * (
+                    sum([state_labels[x + 2 * even_weight_labels.index(special_label) + 1]]))
+                for special_label in special_labels for x in np.linspace(0, (chi - 1) * (2 ** n + 2), chi, dtype='int')
+            ]) ** 2
+            +
+            sum([
+                state_labels[x + 2 ** n] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label) + 1]]))
+                + state_labels[x + 2 ** n + 1] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label)]]))
+                for special_label in special_labels for x in np.linspace(0, (chi - 1) * (2 ** n + 2), chi, dtype='int')
+            ]) ** 2
     ))
 
 
 def normalisation_constraints(state_labels):
-    return [np.sum(state_labels[x: x + 2 ** n] ** 2) for x in [0, 2 ** n + 2, 2 * (2 ** n + 2)]]
+    return [np.sum(state_labels[x: x + 2 ** n] ** 2) for x in
+            np.linspace(0, (chi - 1) * (2 ** n + 2), chi, dtype='int')]
 
 
 def gaussian_constraints(state_labels):
     g_constraints = []
-    for x in [0, 2 ** n + 2, 2 * (2 ** n + 2)]:
+
+    for x in np.linspace(0, (chi - 1) * (2 ** n + 2), chi, dtype='int'):
         for c in constraints:
             # real part
             g_constraints.append(
                 sum([
                     (
-                        (state_labels[x + 2 * even_weight_labels.index(t[0])]
-                         * state_labels[x + 2 * even_weight_labels.index(t[1])])
-                        - (state_labels[x + 2 * even_weight_labels.index(t[0]) + 1]
-                           * state_labels[x + 2 * even_weight_labels.index(t[1]) + 1])
+                            (state_labels[x + 2 * even_weight_labels.index(t[0])]
+                             * state_labels[x + 2 * even_weight_labels.index(t[1])])
+                            - (state_labels[x + 2 * even_weight_labels.index(t[0]) + 1]
+                               * state_labels[x + 2 * even_weight_labels.index(t[1]) + 1])
                     ) * ((-1) ** index)
                     for index, t in enumerate(c)
                 ])
@@ -102,10 +105,10 @@ def gaussian_constraints(state_labels):
             g_constraints.append(
                 sum([
                     (
-                        (state_labels[x + 2 * even_weight_labels.index(t[0])]
-                         * state_labels[x + 2 * even_weight_labels.index(t[1]) + 1])
-                        + (state_labels[x + 2 * even_weight_labels.index(t[0]) + 1]
-                           * state_labels[x + 2 * even_weight_labels.index(t[1])])
+                            (state_labels[x + 2 * even_weight_labels.index(t[0])]
+                             * state_labels[x + 2 * even_weight_labels.index(t[1]) + 1])
+                            + (state_labels[x + 2 * even_weight_labels.index(t[0]) + 1]
+                               * state_labels[x + 2 * even_weight_labels.index(t[1])])
                     ) * ((-1) ** index)
                     for index, t in enumerate(c)
                 ])
@@ -119,8 +122,8 @@ def all_constraints(state_labels):
 
 def _find_gaussian_rank_magic():
     """Decomposes tensor products of a magic state into a sum of Gaussian states"""
-    start_states = gaussian_states(3, n)
-    start_weight = 1 / (3 ** 0.5)
+    start_states = gaussian_states(chi, n)
+    start_weight = 1 / (chi ** 0.5)
 
     def map_state(state, weight):
         return np.array(
@@ -128,15 +131,13 @@ def _find_gaussian_rank_magic():
         ).reshape(2 ** n + 2)
 
     initial_random_states = np.array([
-        map_state(start_states[:, 0], start_weight),
-        map_state(start_states[:, 1], start_weight),
-        map_state(start_states[:, 2], start_weight)
-    ], dtype='float64').reshape((2 ** n + 2) * 3)
+        map_state(start_states[:, i], start_weight) for i in range(chi)
+    ], dtype='float64').reshape((2 ** n + 2) * chi)
 
     nonlinear_constraint = NonlinearConstraint(
         all_constraints,
-        [0] * 3 * 2 * len(constraints) + [1] * 3,
-        [0] * 3 * 2 * len(constraints) + [1] * 3
+        [0] * chi * 2 * len(constraints) + [1] * chi,
+        [0] * chi * 2 * len(constraints) + [1] * chi
     )
     logger.info('Starting minimize')
     logger.info(cost_function(initial_random_states))
@@ -161,8 +162,16 @@ def s_key(c):
     return sum(c[0])
 
 
+chi = 4
 n = 8
-constraints = sorted(get_constraints_from_targets(get_small_set_targets(n)), key=s_key)
+unsorted_constraints = get_constraints_from_targets(get_small_set_targets(n)) \
+                       + get_constraints_from_targets(get_small_set_targets(n, [0, 0, 0, 0, 1, 1, 1, 1])) \
+                       + get_constraints_from_targets(get_small_set_targets(n, [1, 1, 1, 1, 0, 0, 0, 0])) \
+                       + get_constraints_from_targets(get_small_set_targets(n, [1, 1, 1, 1, 1, 1, 1, 1]))
+constraints = sorted(
+    remove_duplicates(unsorted_constraints),
+    key=s_key
+)
 
 even_weight_bin = [
     item for sublist in
