@@ -1,7 +1,7 @@
 import qutip
 import numpy as np
 from typing import List
-from scipy.optimize import minimize, NonlinearConstraint
+from scipy.optimize import minimize, NonlinearConstraint, basinhopping
 
 from gaussianstates.constraints.independent_constraints_direct import get_small_set_targets
 from gaussianstates.states.gaussian_states import gaussian_states
@@ -140,15 +140,25 @@ def _find_gaussian_rank_magic():
     logger.info(cost_function(initial_random_states))
     logger.info(all_constraints(initial_random_states))
     verify_constraints(constraints, start_states[:, 0])
-    solution = minimize(
+    solution_basin = basinhopping(
         cost_function,
         initial_random_states,
-        method='trust-constr',
-        jac=grad_cost_function,
-        options={'verbose': 3, 'initial_tr_radius': 9.0},
-        constraints=nonlinear_constraint,
+        minimizer_kwargs={
+            "method": "trust-constr",
+            "constraints": nonlinear_constraint,
+            "options": {'verbose': 3, 'initial_tr_radius': 9.0},
+            "jac": grad_cost_function
+        }
     )
-    return solution
+    # solution = minimize(
+    #     cost_function,
+    #     initial_random_states,
+    #     method='trust-constr',
+    #     jac=grad_cost_function,
+    #     options={'verbose': 3, 'initial_tr_radius': 9.0},
+    #     constraints=nonlinear_constraint,
+    # )
+    return solution_basin
 
 
 def main():
