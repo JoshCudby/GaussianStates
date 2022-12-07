@@ -17,66 +17,63 @@ def _magic_state() -> qutip.Qobj:
     return 1 / (2 ** 0.5) * (qutip.basis(16, 0) + qutip.basis(16, 15))
 
 
-def grad_cost_function(state_labels: List[List[complex]]):
-    penalty = 3
+def real_part_sum(state_labels: np.ndarray):
+    return sum([
+        state_labels[x + 2 ** n]
+        * (sum([state_labels[x + 2 * even_weight_labels.index(special_label)]]))
+        - state_labels[x + 2 ** n + 1]
+        * (sum([state_labels[x + 2 * even_weight_labels.index(special_label) + 1]]))
+        for special_label in special_labels for x in np.linspace(0, (chi - 1) * (2 ** n + 2), chi, dtype='int')
+    ])
 
-    even_weight_bin = [
-        item for sublist in
-        [strings_with_weight(n, k) for k in range(0, n + 1, 2)]
-        for item in sublist
-    ]
-    even_weight_labels = [read_binary_array(b) for b in even_weight_bin]
 
-    special_labels = [0, 15, 240, 255]
-    grad = np.zeros((3, len(even_weight_labels) + 1), dtype=complex)
-    for j, state_label in enumerate(state_labels):
-        if not len(state_label) == len(even_weight_labels) + 1:
-            logger.error(state_label)
-            logger.error(len(state_label))
-            logger.error(len(even_weight_labels))
-            raise Exception("State label should be a const and then the amplitudes.")
-
-        for label_index, label in enumerate(even_weight_labels):
-            grad[j][label_index] = (
-                -0.5 * state_label[-1] if label in special_labels else 0
-                                                                       + penalty * (
-                                                                               sum([
-                                                                                   state_label[even_weight_labels.index(
-                                                                                       term[(i + 1) % 2])] * (
-                                                                                       -1) ** term_index
-                                                                                   for c in constraints for
-                                                                                   term_index, term in enumerate(c) for
-                                                                                   i, t in enumerate(term)
-                                                                                   if term[i] == label
-                                                                               ])
-                                                                               + abs(state_label[label_index])
-                                                                       )
-            )
-
-        grad[j][-1] = (
-                -0.5 * (
-                state_label[even_weight_labels.index(0)] + state_label[even_weight_labels.index(15)] +
-                state_label[even_weight_labels.index(240)] + state_label[even_weight_labels.index(255)]
-        )
-        )
-    return grad
+def imag_part_sum(state_labels: np.ndarray):
+    return sum([
+        state_labels[x + 2 ** n]
+        * (sum([state_labels[x + 2 * even_weight_labels.index(special_label) + 1]]))
+        + state_labels[x + 2 ** n + 1]
+        * (sum([state_labels[x + 2 * even_weight_labels.index(special_label)]]))
+        for special_label in special_labels for x in np.linspace(0, (chi - 1) * (2 ** n + 2), chi, dtype='int')
+    ])
 
 
 def cost_function(state_labels):
-    return abs(1 - 1 / 4 * (
+    return abs(
+        1 - 1 / 4 * (real_part_sum(state_labels) ** 2 + imag_part_sum(state_labels) ** 2)
+    )
+
+
+def grad_cost_function(state_labels):
+    grad = np.zeros(chi * (2 ** n + 2))
+    for x in np.linspace(0, (chi - 1) * (2 ** n + 2), chi, dtype='int'):
+        for special_label in special_labels:
+            grad[x + 2 * even_weight_labels.index(special_label)] = - 1 / 2 * (
+                state_labels[x + 2 ** n] * real_part_sum(state_labels)
+                + state_labels[x + 2 ** n + 1] * imag_part_sum(state_labels)
+            )
+            grad[x + 2 * even_weight_labels.index(special_label) + 1] = - 1 / 2 * (
+                - state_labels[x + 2 ** n + 1] * real_part_sum(state_labels)
+                + state_labels[x + 2 ** n] * imag_part_sum(state_labels)
+            )
+
+        grad[x + 2 ** n] = - 1 / 2 * (
             sum([
-                state_labels[x + 2 ** n] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label)]]))
-                - state_labels[x + 2 ** n + 1] * (
-                    sum([state_labels[x + 2 * even_weight_labels.index(special_label) + 1]]))
-                for special_label in special_labels for x in np.linspace(0, (chi - 1) * (2 ** n + 2), chi, dtype='int')
-            ]) ** 2
-            +
-            sum([
-                state_labels[x + 2 ** n] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label) + 1]]))
-                + state_labels[x + 2 ** n + 1] * (sum([state_labels[x + 2 * even_weight_labels.index(special_label)]]))
-                for special_label in special_labels for x in np.linspace(0, (chi - 1) * (2 ** n + 2), chi, dtype='int')
-            ]) ** 2
-    ))
+                state_labels[x + 2 * even_weight_labels.index(special_label)] for special_label in special_labels
+            ]) * real_part_sum(state_labels)
+            + sum([
+                state_labels[x + 2 * even_weight_labels.index(special_label) + 1] for special_label in special_labels
+            ]) * imag_part_sum(state_labels)
+        )
+        grad[x + 2 ** n + 1] = - 1 / 2 * (
+            - sum([
+                state_labels[x + 2 * even_weight_labels.index(special_label) + 1] for special_label in special_labels
+            ]) * real_part_sum(state_labels)
+            + sum([
+                state_labels[x + 2 * even_weight_labels.index(special_label)] for special_label in special_labels
+            ]) * imag_part_sum(state_labels)
+        )
+
+    return grad
 
 
 def normalisation_constraints(state_labels):
@@ -93,10 +90,10 @@ def gaussian_constraints(state_labels):
             g_constraints.append(
                 sum([
                     (
-                            (state_labels[x + 2 * even_weight_labels.index(t[0])]
-                             * state_labels[x + 2 * even_weight_labels.index(t[1])])
-                            - (state_labels[x + 2 * even_weight_labels.index(t[0]) + 1]
-                               * state_labels[x + 2 * even_weight_labels.index(t[1]) + 1])
+                        (state_labels[x + 2 * even_weight_labels.index(t[0])]
+                         * state_labels[x + 2 * even_weight_labels.index(t[1])])
+                        - (state_labels[x + 2 * even_weight_labels.index(t[0]) + 1]
+                           * state_labels[x + 2 * even_weight_labels.index(t[1]) + 1])
                     ) * ((-1) ** index)
                     for index, t in enumerate(c)
                 ])
@@ -105,10 +102,10 @@ def gaussian_constraints(state_labels):
             g_constraints.append(
                 sum([
                     (
-                            (state_labels[x + 2 * even_weight_labels.index(t[0])]
-                             * state_labels[x + 2 * even_weight_labels.index(t[1]) + 1])
-                            + (state_labels[x + 2 * even_weight_labels.index(t[0]) + 1]
-                               * state_labels[x + 2 * even_weight_labels.index(t[1])])
+                        (state_labels[x + 2 * even_weight_labels.index(t[0])]
+                         * state_labels[x + 2 * even_weight_labels.index(t[1]) + 1])
+                        + (state_labels[x + 2 * even_weight_labels.index(t[0]) + 1]
+                           * state_labels[x + 2 * even_weight_labels.index(t[1])])
                     ) * ((-1) ** index)
                     for index, t in enumerate(c)
                 ])
@@ -147,7 +144,8 @@ def _find_gaussian_rank_magic():
         cost_function,
         initial_random_states,
         method='trust-constr',
-        options={'verbose': 3, 'initial_tr_radius': 3.0},
+        jac=grad_cost_function,
+        options={'verbose': 3, 'initial_tr_radius': 9.0},
         constraints=nonlinear_constraint,
     )
     return solution
