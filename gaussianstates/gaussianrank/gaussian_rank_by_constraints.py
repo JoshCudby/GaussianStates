@@ -25,6 +25,7 @@ even_weight_labels = sorted([read_binary_array(b) for b in even_weight_bin])
 special_labels = [0, 15, 240, 255]
 special_indices = [even_weight_labels.index(x) for x in special_labels]
 
+
 def main():
     a_vars = sp.symarray('a', (chi, 2 ** (n - 1)))
     c_vars = sp.symbols('c0:%d' % chi)
