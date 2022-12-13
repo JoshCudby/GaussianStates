@@ -67,8 +67,10 @@ def main():
 
     logger.info('Starting solve')
     system = sum_equations + normalisation_equations
-    solution = sp.nonlinsolve(system, all_indep_vars)
-    return solution
+    # solution = sp.solve_poly_system(system, all_indep_vars)
+
+    groebner = sp.polys.polytools.groebner(sum_equations)
+    return groebner
 
 
 if __name__ == '__main__':
