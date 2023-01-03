@@ -66,10 +66,11 @@ def main():
         ]) - 1)
 
     logger.info('Starting solve')
-    system = sum_equations + normalisation_equations
+    # system = sum_equations + normalisation_equations
     # solution = sp.solve_poly_system(system, all_indep_vars)
+    # return solution
 
-    groebner = sp.polys.polytools.groebner(sum_equations)
+    groebner = sp.polys.polytools.groebner(sum_equations, method='f5b')
     return groebner
 
 
