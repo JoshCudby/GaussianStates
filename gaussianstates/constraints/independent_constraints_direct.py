@@ -36,7 +36,7 @@ def get_small_set_targets(n: int, input_string=None) -> List[List[np.ndarray]]:
             odd_parity_strings[j]
             for j in range(len(odd_parity_strings))
             if hamming(first_target, odd_parity_strings[j]) * n > 2
-            and all([odd_parity_strings[j][k] == input_string[k] for k in range(i + 1)])
+               and all([odd_parity_strings[j][k] == input_string[k] for k in range(i + 1)])
         ]
         for second_target in second_targets:
             targets.append([first_target, second_target])
@@ -73,8 +73,9 @@ def get_independent_constraints_directly_from_small_set(n: int) -> (List[np.ndar
 
     even_weight = [
         item for sublist in
-        [strings_with_weight(n, k) for k in range(4, n + 1, 2)]
+        [strings_with_weight(n, k) for k in range(0, n + 1, 2)]
         for item in sublist
+        if hamming(item, [0, 0, 0, 0, 0, 0, 1, 1]) * n > 4
     ]
 
     ints = [read_binary_array(i) for i in even_weight]
@@ -90,8 +91,8 @@ def get_independent_constraints_directly_from_small_set(n: int) -> (List[np.ndar
 
 
 def get_independent_constraints_directly_from_target_set(
-    targets: List[List[np.ndarray]],
-    n: int
+        targets: List[List[np.ndarray]],
+        n: int
 ):
     parity = n % 2
     if parity != 0:

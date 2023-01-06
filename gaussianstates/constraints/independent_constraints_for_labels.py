@@ -117,6 +117,7 @@ if __name__ == '__main__':
             size_8_count = count_all_but_4_bit_agreements(labels)
             break
 
+
     def sorting_key(constraint):
         return sum(constraint[0])
 
@@ -124,12 +125,13 @@ if __name__ == '__main__':
     constraints = sorted(get_constraints_from_targets(get_targets(n)), key=sorting_key)
 
     number_labels = 2 ** (n - 1) - int(n * (n - 1) / 2) - 1
-    labels = random.sample(even_weight_labels, number_labels)
+    # labels = random.sample(even_weight_labels, number_labels)
+    labels = [0, 15, 240, 255]
     J = make_jacobian(constraints, labels, n)
     rank = np.linalg.matrix_rank(J)
-    while rank != number_labels:
-        logger.info(labels)
-        labels = random.sample(even_weight_labels, number_labels)
-        J = make_jacobian(constraints, labels, n)
-        rank = np.linalg.matrix_rank(J)
+    # while rank != number_labels:
+    #     logger.info(labels)
+    #     labels = random.sample(even_weight_labels, number_labels)
+    #     J = make_jacobian(constraints, labels, n)
+    #     rank = np.linalg.matrix_rank(J)
     # count = count_all_but_3_bit_agreements(labels)

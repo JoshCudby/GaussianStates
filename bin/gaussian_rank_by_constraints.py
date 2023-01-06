@@ -4,7 +4,7 @@ import time
 import pickle
 
 sys.path.extend([os.getcwd()])
-from gaussianstates.gaussianrank import gaussian_rank_by_independent_constraints
+from gaussianstates.gaussianrank import gaussian_rank_reduced_constraints
 from gaussianstates.utils import logging_utils
 
 
@@ -13,7 +13,7 @@ if __name__ == '__main__':
     logger.info(f'Computing gaussian rank ...')
     start_time = time.time()
 
-    solution = gaussian_rank_by_independent_constraints.main()
+    solution = gaussian_rank_reduced_constraints.main()
 
     logger.info('Computed rank')
     logger.info(solution)
