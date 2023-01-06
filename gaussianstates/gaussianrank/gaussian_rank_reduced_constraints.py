@@ -1,3 +1,4 @@
+import numpy as np
 import sympy as sp
 from gaussianstates.constraints.independent_constraints_direct import get_targets
 from gaussianstates.gaussianrank.gaussian_rank_magic import s_key
@@ -28,26 +29,37 @@ special_indices = [even_weight_labels.index(x) for x in special_labels]
 
 def main():
     a_vars = sp.symarray('a', (chi, 3))
-    c_vars = sp.symbols('c0:%d' % chi)
-    all_vars = [a for sublist in a_vars for a in sublist] + [c for c in c_vars]
+    # c_vars = sp.symbols('c0:%d' % chi)
+    all_vars = [a for sublist in a_vars for a in sublist]  # + [c for c in c_vars]
 
     sum_equations = []
     for i in range(3):
         sum_equations.append(
             sum([
-                c_vars[j] * a_vars[j][i] for j in range(chi)
+                # c_vars[j] * a_vars[j][i] for j in range(chi)
+                a_vars[j][i] for j in range(chi)
             ])
             - (sp.Rational(1, 2) if i in special_indices else 0)
         )
     sum_equations.append(
         sum([
-            c_vars[j] * a_vars[j][1] * a_vars[j][2] / a_vars[j][0] for j in range(chi)
+            # c_vars[j] * a_vars[j][1] * a_vars[j][2] / a_vars[j][0] for j in range(chi)
+            a_vars[j][1] * a_vars[j][2] / a_vars[j][0] for j in range(chi)
         ])
         - sp.Rational(1, 2)
     )
 
+    normalisation_equations = []
+    for i in range(chi):
+        normalisation_equations.append(
+            sum([
+                a_vars[i][j] * np.conj(a_vars[i][j]) for j in range(3)
+            ])
+            + (a_vars[i][1] * a_vars[i][2] / a_vars[i][0]) * np.conj(a_vars[i][1] * a_vars[i][2] / a_vars[i][0])
+        )
+
     logger.info('Starting solve')
-    system = sum_equations
+    system = sum_equations + normalisation_equations
     solution = sp.solve(system, all_vars)
     return solution
 
